@@ -1,4 +1,4 @@
-module github.com/zhoreeq/Popura
+module github.com/popura-network/Popura
 
 go 1.13
 
