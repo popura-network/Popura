@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/hex"
-	"encoding/json"
 	"flag"
 	"fmt"
 	"net"
@@ -14,7 +13,6 @@ import (
 
 	"github.com/gologme/log"
 	gsyslog "github.com/hashicorp/go-syslog"
-	"github.com/hjson/hjson-go"
 	"github.com/kardianos/minwinsvc"
 
 	"github.com/yggdrasil-network/yggdrasil-go/src/address"
@@ -81,7 +79,8 @@ func run_yggdrasil() {
 	loglevel := flag.String("loglevel", "info", "loglevel to enable")
 	flag.Parse()
 
-	var cfg *popura.PopuraConfig
+	var yggConfig *config.NodeConfig
+	var popConfig *popura.PopuraConfig
 	var err error
 	switch {
 	case *ver:
@@ -91,30 +90,22 @@ func run_yggdrasil() {
 	case *autoconf:
 		// Use an autoconf-generated config, this will give us random keys and
 		// port numbers, and will use an automatically selected TUN/TAP interface.
-		cfg = popura.GenerateConfig()
+		yggConfig, popConfig = popura.GenerateConfig()
 	case *useconffile != "" || *useconf:
 		// Read the configuration from either stdin or from the filesystem
-		cfg = popura.LoadConfig(useconf, useconffile, normaliseconf)
+		yggConfig, popConfig = popura.LoadConfig(useconf, useconffile, normaliseconf)
 		// If the -normaliseconf option was specified then remarshal the above
 		// configuration and print it back to stdout. This lets the user update
 		// their configuration file with newly mapped names (like above) or to
 		// convert from plain JSON to commented HJSON.
 		if *normaliseconf {
-			var bs []byte
-			if *confjson {
-				bs, err = json.MarshalIndent(cfg, "", "  ")
-			} else {
-				bs, err = hjson.Marshal(cfg)
-			}
-			if err != nil {
-				panic(err)
-			}
-			fmt.Println(string(bs))
+			fmt.Println(popura.SaveConfig(yggConfig, popConfig, *confjson))
 			return
 		}
 	case *genconf:
 		// Generate a new configuration and print it to stdout.
-		fmt.Println(popura.GenerateConfigString(*confjson))
+		yggConfig, popConfig = popura.GenerateConfig()
+		fmt.Println(popura.SaveConfig(yggConfig, popConfig, *confjson))
 	default:
 		// No flags were provided, therefore print the list of flags to stdout.
 		flag.PrintDefaults()
@@ -122,12 +113,12 @@ func run_yggdrasil() {
 	// Have we got a working configuration? If we don't then it probably means
 	// that neither -autoconf, -useconf or -useconffile were set above. Stop
 	// if we don't.
-	if cfg == nil {
+	if yggConfig == nil {
 		return
 	}
 	// Have we been asked for the node address yet? If so, print it and then stop.
 	getNodeID := func() *crypto.NodeID {
-		if pubkey, err := hex.DecodeString(cfg.Yggdrasil.EncryptionPublicKey); err == nil {
+		if pubkey, err := hex.DecodeString(yggConfig.EncryptionPublicKey); err == nil {
 			var box crypto.BoxPubKey
 			copy(box[:], pubkey[:])
 			return crypto.GetNodeID(&box)
@@ -154,6 +145,12 @@ func run_yggdrasil() {
 		return
 	default:
 	}
+
+	if popConfig.TestParameter {
+		fmt.Println("Test parameter is enabled")
+		return
+	}
+
 	// Create a new logger that logs output to stdout.
 	var logger *log.Logger
 	switch *logto {
@@ -180,7 +177,7 @@ func run_yggdrasil() {
 	n := node{}
 	// Now start Yggdrasil - this starts the DHT, router, switch and other core
 	// components needed for Yggdrasil to operate
-	n.state, err = n.core.Start(cfg.Yggdrasil, logger)
+	n.state, err = n.core.Start(yggConfig, logger)
 	if err != nil {
 		logger.Errorln("An error occurred during startup")
 		panic(err)
@@ -239,11 +236,11 @@ func run_yggdrasil() {
 			goto exit
 		case _ = <-r:
 			if *useconffile != "" {
-				cfg = popura.LoadConfig(useconf, useconffile, normaliseconf)
+				yggConfig, popConfig = popura.LoadConfig(useconf, useconffile, normaliseconf)
 				logger.Infoln("Reloading configuration from", *useconffile)
-				n.core.UpdateConfig(cfg.Yggdrasil)
-				n.tuntap.UpdateConfig(cfg.Yggdrasil)
-				n.multicast.UpdateConfig(cfg.Yggdrasil)
+				n.core.UpdateConfig(yggConfig)
+				n.tuntap.UpdateConfig(yggConfig)
+				n.multicast.UpdateConfig(yggConfig)
 			} else {
 				logger.Errorln("Reloading config at runtime is only possible with -useconffile")
 			}

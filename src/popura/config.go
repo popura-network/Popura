@@ -16,35 +16,40 @@ import (
 
 
 type PopuraConfig struct {
-	Yggdrasil     *config.NodeConfig
 	TestParameter bool `comment:"Test parameter for Popura"`
 }
 
-func GenerateConfig() *PopuraConfig {
-	pcfg := PopuraConfig{}
-	pcfg.TestParameter = false
+func GenerateConfig() (*config.NodeConfig, *PopuraConfig) {
+	popConfig := PopuraConfig{}
+	popConfig.TestParameter = false
 
-	pcfg.Yggdrasil = config.GenerateConfig()
-
-	return &pcfg
+	return config.GenerateConfig(), &popConfig
 }
 
-func GenerateConfigString(isjson bool) string {
-	cfg := GenerateConfig()
-	var bs []byte
+func SaveConfig(yggConfig *config.NodeConfig, popConfig *PopuraConfig, isjson bool) string {
+	// combine config structs into one and marshal it
+	// FIXME hjson comments are lost
+	var combo map[string]interface{}
+
+	ybs, _ := json.Marshal(yggConfig)
+	pbs, _ := json.Marshal(popConfig)
+	json.Unmarshal(ybs, &combo)
+	json.Unmarshal(pbs, &combo)
+
+	var res []byte
 	var err error
 	if isjson {
-		bs, err = json.MarshalIndent(cfg, "", "  ")
+		res, err = json.MarshalIndent(combo, "", "  ")
 	} else {
-		bs, err = hjson.Marshal(cfg)
+		res, err = hjson.Marshal(combo)
 	}
 	if err != nil {
 		panic(err)
 	}
-	return string(bs)
+	return string(res)
 }
 
-func LoadConfig(useconf *bool, useconffile *string, normaliseconf *bool) *PopuraConfig {
+func LoadConfig(useconf *bool, useconffile *string, normaliseconf *bool) (*config.NodeConfig, *PopuraConfig) {
 	var conf []byte
 	var err error
 	if *useconffile != "" {
@@ -74,7 +79,7 @@ func LoadConfig(useconf *bool, useconffile *string, normaliseconf *bool) *Popura
 	// then parse the configuration we loaded above on top of it. The effect
 	// of this is that any configuration item that is missing from the provided
 	// configuration will use a sane default.
-	pcfg := GenerateConfig()
+	yggConfig, popConfig := GenerateConfig()
 	var dat map[string]interface{}
 	if err := hjson.Unmarshal(conf, &dat); err != nil {
 		panic(err)
@@ -85,11 +90,15 @@ func LoadConfig(useconf *bool, useconffile *string, normaliseconf *bool) *Popura
 	if err != nil {
 		panic(err)
 	}
-	json.Unmarshal(confJson, &pcfg)
+	json.Unmarshal(confJson, &yggConfig)
+	json.Unmarshal(confJson, &popConfig)
 	// Overlay our newly mapped configuration onto the autoconf node config that
 	// we generated above.
-	if err = mapstructure.Decode(dat, &pcfg); err != nil {
+	if err = mapstructure.Decode(dat, &yggConfig); err != nil {
 		panic(err)
 	}
-	return pcfg
+	if err = mapstructure.Decode(dat, &popConfig); err != nil {
+		panic(err)
+	}
+	return yggConfig, popConfig
 }
