@@ -26,6 +26,7 @@ import (
 	"github.com/yggdrasil-network/yggdrasil-go/src/yggdrasil"
 
 	"github.com/popura-network/Popura/src/popura"
+	"github.com/popura-network/Popura/src/autopeering"
 )
 
 type node struct {
@@ -34,6 +35,22 @@ type node struct {
 	tuntap    module.Module // tuntap.TunAdapter
 	multicast module.Module // multicast.Multicast
 	admin     module.Module // admin.AdminSocket
+}
+
+func getBuiltinPeers() []string {
+	// TODO: get peers from assets
+	peers := []string{"tcp://140.238.168.104:17117",
+	"tcp://155.210.31.40:12345",
+	"tcp://176.223.130.120:22632",
+	"tcp://185.164.138.18:1001",
+	"tcp://188.226.125.64:54321",
+	"tcp://194.177.21.156:5066",
+	"tcp://195.123.245.146:7743",
+	"tcp://212.129.52.193:39565",
+	"tcp://217.163.11.185:31337",
+	"tcp://37.205.14.171:46370"}
+
+	return peers
 }
 
 
@@ -229,6 +246,17 @@ func run_yggdrasil() {
 	// Capture the service being stopped on Windows.
 	minwinsvc.SetOnExit(n.shutdown)
 	defer n.shutdown()
+
+	// Setup auto peering
+	if len(yggConfig.Peers) == 0 {
+		peers := autopeering.GetClosestPeers(getBuiltinPeers(), 3)
+		for _, p := range peers {
+			if err := n.core.AddPeer(p, ""); err != nil {
+				logger.Infoln("Failed to connect to peer:", err)
+			}
+		}
+	}
+
 	// Wait for the terminate/interrupt signal. Once a signal is received, the
 	// deferred Stop function above will run which will shut down TUN/TAP.
 	for {
