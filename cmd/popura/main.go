@@ -39,21 +39,8 @@ type node struct {
 
 // Returns list of automatically selected peers
 func getAutoPeers() []string {
-	// TODO: get peers from assets
-	hcPeers := []string{"tcp://140.238.168.104:17117",
-	"tcp://155.210.31.40:12345",
-	"tcp://176.223.130.120:22632",
-	"tcp://185.164.138.18:1001",
-	"tcp://188.226.125.64:54321",
-	"tcp://194.177.21.156:5066",
-	"tcp://195.123.245.146:7743",
-	"tcp://212.129.52.193:39565",
-	"tcp://217.163.11.185:31337",
-	"tcp://37.205.14.171:46370"}
-	lcPeers := []string{}
-
-	peers := autopeering.RandomPick(autopeering.GetClosestPeers(hcPeers, 10), 2)
-	peers = append(peers, autopeering.RandomPick(autopeering.GetClosestPeers(lcPeers, 3), 1)...)
+	peers := autopeering.RandomPick(autopeering.GetClosestPeers(autopeering.HighCapPeers, 10), 2)
+	peers = append(peers, autopeering.RandomPick(autopeering.GetClosestPeers(autopeering.LowCapPeers, 3), 1)...)
 
 	return peers
 }
