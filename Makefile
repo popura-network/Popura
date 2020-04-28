@@ -1,7 +1,7 @@
 GOARCH := $(GOARCH)
 GOOS := $(GOOS)
 FLAGS := -ldflags "-s -w"
-PEER_LIST := "assets/peers.txt"
+PEER_LIST ?= "assets/peers.txt"
 peers.go := "src/autopeering/peers.go"
 
 all: peers_asset
