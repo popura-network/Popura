@@ -10,7 +10,6 @@ import (
 	"strings"
 	"syscall"
 
-
 	"github.com/gologme/log"
 	gsyslog "github.com/hashicorp/go-syslog"
 	"github.com/kardianos/minwinsvc"
@@ -25,6 +24,7 @@ import (
 	"github.com/yggdrasil-network/yggdrasil-go/src/version"
 	"github.com/yggdrasil-network/yggdrasil-go/src/yggdrasil"
 
+	"github.com/popura-network/Popura/src/autopeering"
 	"github.com/popura-network/Popura/src/popura"
 )
 
@@ -36,6 +36,13 @@ type node struct {
 	admin     module.Module // admin.AdminSocket
 }
 
+// Returns list of automatically selected peers
+func getAutoPeers() []string {
+	peers := autopeering.RandomPick(autopeering.GetClosestPeers(autopeering.HighCapPeers, 10), 2)
+	peers = append(peers, autopeering.RandomPick(autopeering.GetClosestPeers(autopeering.LowCapPeers, 3), 1)...)
+
+	return peers
+}
 
 func setLogLevel(loglevel string, logger *log.Logger) {
 	levels := [...]string{"error", "warn", "info", "debug", "trace"}
@@ -72,6 +79,7 @@ func run_yggdrasil() {
 	normaliseconf := flag.Bool("normaliseconf", false, "use in combination with either -useconf or -useconffile, outputs your configuration normalised")
 	confjson := flag.Bool("json", false, "print configuration from -genconf or -normaliseconf as JSON instead of HJSON")
 	autoconf := flag.Bool("autoconf", false, "automatic mode (dynamic IP, peer with IPv6 neighbors)")
+	autopeer := flag.Bool("autopeer", false, "automatic Internet peering (using peers from github.com/yggdrasil-network/public-peers)")
 	ver := flag.Bool("version", false, "prints the version of this build")
 	logto := flag.String("logto", "stdout", "file path to log to, \"syslog\" or \"stdout\"")
 	getaddr := flag.Bool("address", false, "returns the IPv6 address as derived from the supplied configuration")
@@ -229,6 +237,16 @@ func run_yggdrasil() {
 	// Capture the service being stopped on Windows.
 	minwinsvc.SetOnExit(n.shutdown)
 	defer n.shutdown()
+
+	// Setup auto peering
+	if *autopeer && len(yggConfig.Peers) == 0 {
+		for _, p := range getAutoPeers() {
+			if err := n.core.AddPeer(p, ""); err != nil {
+				logger.Infoln("Failed to connect to peer:", err)
+			}
+		}
+	}
+
 	// Wait for the terminate/interrupt signal. Once a signal is received, the
 	// deferred Stop function above will run which will shut down TUN/TAP.
 	for {
