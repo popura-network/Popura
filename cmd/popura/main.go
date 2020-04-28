@@ -10,7 +10,6 @@ import (
 	"strings"
 	"syscall"
 
-
 	"github.com/gologme/log"
 	gsyslog "github.com/hashicorp/go-syslog"
 	"github.com/kardianos/minwinsvc"
@@ -25,8 +24,8 @@ import (
 	"github.com/yggdrasil-network/yggdrasil-go/src/version"
 	"github.com/yggdrasil-network/yggdrasil-go/src/yggdrasil"
 
-	"github.com/popura-network/Popura/src/popura"
 	"github.com/popura-network/Popura/src/autopeering"
+	"github.com/popura-network/Popura/src/popura"
 )
 
 type node struct {
@@ -44,7 +43,6 @@ func getAutoPeers() []string {
 
 	return peers
 }
-
 
 func setLogLevel(loglevel string, logger *log.Logger) {
 	levels := [...]string{"error", "warn", "info", "debug", "trace"}

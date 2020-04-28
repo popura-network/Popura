@@ -1,18 +1,18 @@
 package autopeering
 
 import (
+	"math/rand"
 	"net"
-	"time"
-	"strings"
 	"sort"
-	"math/rand" 
+	"strings"
+	"time"
 )
 
-const defaultTimeout time.Duration = time.Duration(3)*time.Second
+const defaultTimeout time.Duration = time.Duration(3) * time.Second
 
 type Peer struct {
-	URI string
-	Online bool
+	URI     string
+	Online  bool
 	Latency time.Duration
 }
 
@@ -73,7 +73,7 @@ func GetClosestPeers(peerList []string, num int) []string {
 	}
 	testedPeers = testedPeers[:n]
 
-	sort.Slice(testedPeers, func (i, j int) bool {
+	sort.Slice(testedPeers, func(i, j int) bool {
 		return testedPeers[i].Latency < testedPeers[j].Latency
 	})
 
