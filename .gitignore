@@ -2,3 +2,4 @@
 /yggdrasil.exe
 /yggdrasilctl
 /yggdrasilctl.exe
+src/autopeering/peers.go
