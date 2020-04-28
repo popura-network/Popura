@@ -5,6 +5,7 @@ import (
 	"time"
 	"strings"
 	"sort"
+	"math/rand" 
 )
 
 const defaultTimeout time.Duration = time.Duration(3)*time.Second
@@ -81,6 +82,21 @@ func GetClosestPeers(peerList []string, num int) []string {
 			break
 		}
 		res = append(res, testedPeers[i].URI)
+	}
+
+	return res
+}
+
+// Pick num random peers from a list
+func RandomPick(peerList []string, num int) []string {
+	if len(peerList) <= num {
+		return peerList
+	}
+
+	var res []string
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	for _, i := range r.Perm(num) {
+		res = append(res, peerList[i])
 	}
 
 	return res

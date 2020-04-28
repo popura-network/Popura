@@ -37,9 +37,10 @@ type node struct {
 	admin     module.Module // admin.AdminSocket
 }
 
-func getBuiltinPeers() []string {
+// Returns list of automatically selected peers
+func getAutoPeers() []string {
 	// TODO: get peers from assets
-	peers := []string{"tcp://140.238.168.104:17117",
+	hcPeers := []string{"tcp://140.238.168.104:17117",
 	"tcp://155.210.31.40:12345",
 	"tcp://176.223.130.120:22632",
 	"tcp://185.164.138.18:1001",
@@ -49,6 +50,10 @@ func getBuiltinPeers() []string {
 	"tcp://212.129.52.193:39565",
 	"tcp://217.163.11.185:31337",
 	"tcp://37.205.14.171:46370"}
+	lcPeers := []string{}
+
+	peers := autopeering.RandomPick(autopeering.GetClosestPeers(hcPeers, 10), 2)
+	peers = append(peers, autopeering.RandomPick(autopeering.GetClosestPeers(lcPeers, 3), 1)...)
 
 	return peers
 }
@@ -249,8 +254,7 @@ func run_yggdrasil() {
 
 	// Setup auto peering
 	if len(yggConfig.Peers) == 0 {
-		peers := autopeering.GetClosestPeers(getBuiltinPeers(), 3)
-		for _, p := range peers {
+		for _, p := range getAutoPeers() {
 			if err := n.core.AddPeer(p, ""); err != nil {
 				logger.Infoln("Failed to connect to peer:", err)
 			}
