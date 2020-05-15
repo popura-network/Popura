@@ -107,13 +107,13 @@ func run_yggdrasil() {
 		// their configuration file with newly mapped names (like above) or to
 		// convert from plain JSON to commented HJSON.
 		if *normaliseconf {
-			fmt.Println(popura.SaveConfig(yggConfig, popConfig, *confjson))
+			fmt.Println(popura.SaveConfig(*yggConfig, *popConfig, *confjson))
 			return
 		}
 	case *genconf:
 		// Generate a new configuration and print it to stdout.
 		yggConfig, popConfig = popura.GenerateConfig()
-		fmt.Println(popura.SaveConfig(yggConfig, popConfig, *confjson))
+		fmt.Println(popura.SaveConfig(*yggConfig, *popConfig, *confjson))
 		return
 	default:
 		// No flags were provided, therefore print the list of flags to stdout.

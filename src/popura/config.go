@@ -26,13 +26,39 @@ func GenerateConfig() (*config.NodeConfig, *PopuraConfig) {
 	return config.GenerateConfig(), &popConfig
 }
 
-func SaveConfig(yggConfig *config.NodeConfig, popConfig *PopuraConfig, isjson bool) string {
+// initialize empty values for correct JSON serialization
+func correctEmptyValues(yggConfig *config.NodeConfig) {
+	if len(yggConfig.TunnelRouting.IPv4LocalSubnets) == 0 {
+		yggConfig.TunnelRouting.IPv4LocalSubnets = []string{}
+	}
+	if len(yggConfig.TunnelRouting.IPv6LocalSubnets) == 0 {
+		yggConfig.TunnelRouting.IPv6LocalSubnets = []string{}
+	}
+	if len(yggConfig.TunnelRouting.IPv4RemoteSubnets) == 0 {
+		yggConfig.TunnelRouting.IPv4RemoteSubnets = make(map[string]string)
+	}
+	if len(yggConfig.TunnelRouting.IPv6RemoteSubnets) == 0 {
+		yggConfig.TunnelRouting.IPv6RemoteSubnets = make(map[string]string)
+	}
+	if len(yggConfig.SessionFirewall.WhitelistEncryptionPublicKeys) == 0 {
+		yggConfig.SessionFirewall.WhitelistEncryptionPublicKeys = []string{}
+	}
+	if len(yggConfig.SessionFirewall.BlacklistEncryptionPublicKeys) == 0 {
+		yggConfig.SessionFirewall.BlacklistEncryptionPublicKeys = []string{}
+	}
+	if len(yggConfig.NodeInfo) == 0 {
+		yggConfig.NodeInfo = make(map[string]interface{})
+	}
+}
+
+func SaveConfig(yggConfig config.NodeConfig, popConfig PopuraConfig, isjson bool) string {
 	// combine config structs into one and marshal it
 	// FIXME hjson comments are lost
 	var combo map[string]interface{}
 
-	ybs, _ := json.Marshal(yggConfig)
-	pbs, _ := json.Marshal(popConfig)
+	correctEmptyValues(&yggConfig)
+	ybs, _ := json.Marshal(&yggConfig)
+	pbs, _ := json.Marshal(&popConfig)
 	json.Unmarshal(ybs, &combo)
 	json.Unmarshal(pbs, &combo)
 
