@@ -9,7 +9,7 @@ experimental features which the original client lacks.
 
 1. Install Go
 2. Clone this repository
-3. Run `make`
+3. Run `./build`
 
 ## Information
 
