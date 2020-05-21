@@ -16,12 +16,21 @@ import (
 
 
 type PopuraConfig struct {
-	TestParameter bool `comment:"Test parameter for Popura"`
+	Meshname	MeshnameConfig	`comment:"DNS server description"`
+}
+
+type MeshnameConfig struct {
+	Enable bool                `comment:"Enable or disable the DNS server"`
+	Listen string              `comment:"Listen address for the DNS server"`
+	Config map[string][]string `comment:"DNS zone configuration"`
 }
 
 func GenerateConfig() (*config.NodeConfig, *PopuraConfig) {
 	popConfig := PopuraConfig{}
-	popConfig.TestParameter = false
+
+	popConfig.Meshname.Enable = false
+	popConfig.Meshname.Listen = "[::1]:53535"
+	popConfig.Meshname.Config = map[string][]string{}
 
 	return config.GenerateConfig(), &popConfig
 }
