@@ -24,8 +24,11 @@ import (
 	"github.com/yggdrasil-network/yggdrasil-go/src/version"
 	"github.com/yggdrasil-network/yggdrasil-go/src/yggdrasil"
 
+	_meshname "github.com/zhoreeq/meshname/src/meshname"
+
 	"github.com/popura-network/Popura/src/autopeering"
 	"github.com/popura-network/Popura/src/popura"
+	"github.com/popura-network/Popura/src/meshname"
 )
 
 type node struct {
@@ -34,6 +37,7 @@ type node struct {
 	tuntap    module.Module // tuntap.TunAdapter
 	multicast module.Module // multicast.Multicast
 	admin     module.Module // admin.AdminSocket
+	meshname  popura.Module // *meshname.MeshnameServer
 }
 
 // Returns list of automatically selected peers
@@ -84,6 +88,7 @@ func run_yggdrasil() {
 	logto := flag.String("logto", "stdout", "file path to log to, \"syslog\" or \"stdout\"")
 	getaddr := flag.Bool("address", false, "returns the IPv6 address as derived from the supplied configuration")
 	getsnet := flag.Bool("subnet", false, "returns the IPv6 subnet as derived from the supplied configuration")
+	meshnameconf := flag.String("meshnameconf", "", "prints example Meshname.Config config value for a specified IP address")
 	loglevel := flag.String("loglevel", "info", "loglevel to enable")
 	flag.Parse()
 
@@ -114,6 +119,13 @@ func run_yggdrasil() {
 		// Generate a new configuration and print it to stdout.
 		yggConfig, popConfig = popura.GenerateConfig()
 		fmt.Println(popura.SaveConfig(*yggConfig, *popConfig, *confjson))
+		return
+	case *meshnameconf != "":
+		if conf, err := _meshname.GenConf(*meshnameconf, "meshname."); err == nil {
+			fmt.Println(conf)
+		} else {
+			panic(err)
+		}
 		return
 	default:
 		// No flags were provided, therefore print the list of flags to stdout.
@@ -155,11 +167,6 @@ func run_yggdrasil() {
 	default:
 	}
 
-	if popConfig.TestParameter {
-		fmt.Println("Test parameter is enabled")
-		return
-	}
-
 	// Create a new logger that logs output to stdout.
 	var logger *log.Logger
 	switch *logto {
@@ -197,6 +204,7 @@ func run_yggdrasil() {
 	n.admin = &admin.AdminSocket{}
 	n.multicast = &multicast.Multicast{}
 	n.tuntap = &tuntap.TunAdapter{}
+	n.meshname = &meshname.MeshnameServer{}
 	// Start the admin socket
 	n.admin.Init(&n.core, n.state, logger, nil)
 	if err := n.admin.Start(); err != nil {
@@ -223,6 +231,10 @@ func run_yggdrasil() {
 	} else {
 		logger.Errorln("Unable to get Listener:", err)
 	}
+	// Start the DNS server
+	n.meshname.Init(&n.core, n.state, popConfig, logger, nil)
+	n.meshname.Start()
+
 	// Make some nice output that tells us what our IPv6 address and subnet are.
 	// This is just logged to stdout for the user.
 	address := n.core.Address()
@@ -260,6 +272,7 @@ func run_yggdrasil() {
 				n.core.UpdateConfig(yggConfig)
 				n.tuntap.UpdateConfig(yggConfig)
 				n.multicast.UpdateConfig(yggConfig)
+				n.meshname.UpdateConfig(yggConfig, popConfig)
 			} else {
 				logger.Errorln("Reloading config at runtime is only possible with -useconffile")
 			}
@@ -269,6 +282,7 @@ exit:
 }
 
 func (n *node) shutdown() {
+	n.meshname.Stop()
 	n.admin.Stop()
 	n.multicast.Stop()
 	n.tuntap.Stop()
