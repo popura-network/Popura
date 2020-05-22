@@ -13,17 +13,17 @@ PEER_LIST="assets/peers.txt"
 # Create peers.go "asset" file
 make_peers_go() {
     PEERS_GO_FILE="src/autopeering/peers.go"
-    echo "package autopeering\nvar HighCapPeers = []string{\n" >$PEERS_GO_FILE
+    printf "package autopeering\nvar HighCapPeers = []string{\n" >$PEERS_GO_FILE
     grep "^h" $PEER_LIST | cut -d "," -f2 | while IFS= read -r line
     do 
-        echo "\t\"$line\"," >> $PEERS_GO_FILE
+        printf "\t\"$line\",\n" >> $PEERS_GO_FILE
     done
     sed -i -e "$ s/,/}/" $PEERS_GO_FILE
 
-    echo -n "var LowCapPeers = []string{" >> $PEERS_GO_FILE
+    printf "var LowCapPeers = []string{" >> $PEERS_GO_FILE
     grep "^l" $PEER_LIST | cut -d "," -f2 | while IFS= read -r line
     do 
-        echo "\t\"$line\"," >> $PEERS_GO_FILE
+        printf "\t\"$line\",\n" >> $PEERS_GO_FILE
     done
     sed -i -e "$ s/,/}/" $PEERS_GO_FILE
 }
