@@ -14,9 +14,8 @@ import (
 	"github.com/yggdrasil-network/yggdrasil-go/src/config"
 )
 
-
 type PopuraConfig struct {
-	Meshname	MeshnameConfig	`comment:"DNS server description"`
+	Meshname MeshnameConfig `comment:"DNS server description"`
 }
 
 type MeshnameConfig struct {

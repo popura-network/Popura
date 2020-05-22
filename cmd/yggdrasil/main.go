@@ -27,8 +27,8 @@ import (
 	_meshname "github.com/zhoreeq/meshname/src/meshname"
 
 	"github.com/popura-network/Popura/src/autopeering"
-	"github.com/popura-network/Popura/src/popura"
 	"github.com/popura-network/Popura/src/meshname"
+	"github.com/popura-network/Popura/src/popura"
 )
 
 type node struct {

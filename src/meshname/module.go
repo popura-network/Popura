@@ -15,9 +15,9 @@ import (
 )
 
 type MeshnameServer struct {
-	core        *yggdrasil.Core
-	server	*_meshname.MeshnameServer
-	log         *log.Logger
+	core   *yggdrasil.Core
+	server *_meshname.MeshnameServer
+	log    *log.Logger
 	enable bool
 }
 
