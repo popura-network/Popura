@@ -15,7 +15,6 @@ import (
 )
 
 type MeshnameServer struct {
-	core   *yggdrasil.Core
 	server *_meshname.MeshnameServer
 	log    *log.Logger
 	enable bool
@@ -25,7 +24,7 @@ func (s *MeshnameServer) Init(core *yggdrasil.Core, state *config.NodeState, pop
 	s.log = log
 	s.server = &_meshname.MeshnameServer{}
 	s.server.Init(log, popConfig.Meshname.Listen)
-	yggIPNet := &net.IPNet{net.ParseIP("200::"), net.CIDRMask(7, 128)}
+	yggIPNet := &net.IPNet{IP: net.ParseIP("200::"), Mask: net.CIDRMask(7, 128)}
 	s.enable = popConfig.Meshname.Enable
 	s.server.SetNetworks(map[string]*net.IPNet{"ygg": yggIPNet, "meshname": yggIPNet})
 	if zoneConfig, err := _meshname.ParseZoneConfigMap(popConfig.Meshname.Config); err == nil {
@@ -36,8 +35,9 @@ func (s *MeshnameServer) Init(core *yggdrasil.Core, state *config.NodeState, pop
 
 	return nil
 }
+
 func (s *MeshnameServer) Start() error {
-	if s.enable == true {
+	if s.enable {
 		return s.server.Start()
 	} else {
 		return nil

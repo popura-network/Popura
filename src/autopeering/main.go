@@ -66,7 +66,7 @@ func GetClosestPeers(peerList []string, num int) []string {
 	// Filter online peers
 	n := 0
 	for _, x := range testedPeers {
-		if x.Online == true {
+		if x.Online {
 			testedPeers[n] = x
 			n++
 		}
