@@ -17,13 +17,12 @@ import (
 type MeshnameServer struct {
 	core        *yggdrasil.Core
 	server	*_meshname.MeshnameServer
-	yggConfig      *config.NodeState
-	popConfig      *popura.PopuraConfig
 	log         *log.Logger
 	enable bool
 }
 
 func (s *MeshnameServer) Init(core *yggdrasil.Core, state *config.NodeState, popConfig *popura.PopuraConfig, log *log.Logger, options interface{}) error {
+	s.log = log
 	s.server = &_meshname.MeshnameServer{}
 	s.server.Init(log, popConfig.Meshname.Listen)
 	yggIPNet := &net.IPNet{net.ParseIP("200::"), net.CIDRMask(7, 128)}
