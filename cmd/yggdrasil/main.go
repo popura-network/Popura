@@ -27,6 +27,7 @@ import (
 	_meshname "github.com/zhoreeq/meshname/src/meshname"
 
 	"github.com/popura-network/Popura/src/autopeering"
+	"github.com/popura-network/Popura/src/dhtcrawler"
 	"github.com/popura-network/Popura/src/meshname"
 	"github.com/popura-network/Popura/src/popura"
 )
@@ -89,6 +90,7 @@ func run_yggdrasil() {
 	getaddr := flag.Bool("address", false, "returns the IPv6 address as derived from the supplied configuration")
 	getsnet := flag.Bool("subnet", false, "returns the IPv6 subnet as derived from the supplied configuration")
 	meshnameconf := flag.String("meshnameconf", "", "prints example Meshname.Config config value for a specified IP address")
+	dhtcrawlenable := flag.Bool("dhtcrawler", false, "Enable getDHTCrawl AdminAPI method")
 	loglevel := flag.String("loglevel", "info", "loglevel to enable")
 	flag.Parse()
 
@@ -257,6 +259,12 @@ func run_yggdrasil() {
 				logger.Infoln("Failed to connect to peer:", err)
 			}
 		}
+	}
+
+	if *dhtcrawlenable {
+		dhtcrawler := &dhtcrawler.Crawler{}
+		dhtcrawler.Init(&n.core, logger)
+		dhtcrawler.SetupAdminHandlers(n.admin.(*admin.AdminSocket))
 	}
 
 	// Wait for the terminate/interrupt signal. Once a signal is received, the
