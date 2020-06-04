@@ -24,7 +24,7 @@ const (
 type ApiCache struct {
 	dhtCrawl      admin.Info
 	dhtCrawlMutex sync.RWMutex
-	expiration      int64
+	expiration    int64
 }
 
 func (a *ApiCache) Get(crawler *Crawler) admin.Info {
@@ -41,8 +41,8 @@ func (a *ApiCache) Get(crawler *Crawler) admin.Info {
 }
 
 type Crawler struct {
-	core    *yggdrasil.Core
-	log     *log.Logger
+	core *yggdrasil.Core
+	log  *log.Logger
 
 	apiCache          ApiCache
 	dhtWaitGroup      sync.WaitGroup
@@ -56,12 +56,13 @@ type Crawler struct {
 // This is the structure that we marshal at the end into JSON results
 type results struct {
 	Meta struct {
-		GeneratedAtUTC     int64 `json:"generated_at_utc"`
-		NodesAttempted     int   `json:"nodes_attempted"`
-		NodesSuccessful    int   `json:"nodes_successful"`
-		NodesFailed        int   `json:"nodes_failed"`
-		NodeInfoSuccessful int   `json:"nodeinfo_successful"`
-		NodeInfoFailed     int   `json:"nodeinfo_failed"`
+		GeneratedAtUTC     int64   `json:"generated_at_utc"`
+		NodesAttempted     int     `json:"nodes_attempted"`
+		NodesSuccessful    int     `json:"nodes_successful"`
+		TimeTaken          float64 `json:"crawl_time_seconds"`
+		NodesFailed        int     `json:"nodes_failed"`
+		NodeInfoSuccessful int     `json:"nodeinfo_successful"`
+		NodeInfoFailed     int     `json:"nodeinfo_failed"`
 	} `json:"meta"`
 	Topology *map[string]attempt     `json:"topology"`
 	NodeInfo *map[string]interface{} `json:"nodeinfo"`
@@ -125,6 +126,7 @@ func (s *Crawler) getDHTCrawl() results {
 		NodeInfo: &s.nodeInfoVisited,
 	}
 	res.Meta.GeneratedAtUTC = time.Now().UTC().Unix()
+	res.Meta.TimeTaken = time.Since(starttime).Seconds()
 	res.Meta.NodeInfoSuccessful = len(s.nodeInfoVisited)
 	res.Meta.NodeInfoFailed = found - len(s.nodeInfoVisited)
 	res.Meta.NodesAttempted = attempted
