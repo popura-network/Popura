@@ -11,15 +11,14 @@ require (
 	github.com/kardianos/minwinsvc v0.0.0-20151122163309-cad6b2b879b0
 	github.com/mattn/go-colorable v0.1.6 // indirect
 	github.com/mattn/go-runewidth v0.0.9 // indirect
+	github.com/mdlayher/ndp v0.0.0-20200602162440-17ab9e3e5567
 	github.com/miekg/dns v1.1.29 // indirect
 	github.com/mitchellh/mapstructure v1.3.0
-	github.com/vishvananda/netlink v1.1.0 // indirect
+	github.com/vishvananda/netlink v1.1.0
 	github.com/vishvananda/netns v0.0.0-20200520041808-52d707b772fe // indirect
 	github.com/yggdrasil-network/yggdrasil-go v0.3.14
 	github.com/zhoreeq/meshname v0.0.0-20200519200412-cad772d30578
 	golang.org/x/crypto v0.0.0-20200510223506-06a226fb4e37 // indirect
-	golang.org/x/net v0.0.0-20200520004742-59133d7f0dd7 // indirect
-	golang.org/x/sync v0.0.0-20200317015054-43a5402ce75a // indirect
-	golang.org/x/sys v0.0.0-20200519105757-fe76b779f299 // indirect
+	golang.org/x/net v0.0.0-20200602114024-627f9648deb9
 	golang.org/x/text v0.3.3-0.20191230102452-929e72ca90de
 )
