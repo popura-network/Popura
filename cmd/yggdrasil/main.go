@@ -29,6 +29,7 @@ import (
 	"github.com/popura-network/Popura/src/autopeering"
 	"github.com/popura-network/Popura/src/dhtcrawler"
 	"github.com/popura-network/Popura/src/meshname"
+	"github.com/popura-network/Popura/src/radv"
 	"github.com/popura-network/Popura/src/popura"
 )
 
@@ -38,7 +39,8 @@ type node struct {
 	tuntap    module.Module // tuntap.TunAdapter
 	multicast module.Module // multicast.Multicast
 	admin     module.Module // admin.AdminSocket
-	meshname  popura.Module // *meshname.MeshnameServer
+	meshname  popura.Module // meshname.MeshnameServer
+	radv      popura.Module // radv.RAdv
 }
 
 // Returns list of automatically selected peers
@@ -207,6 +209,7 @@ func run_yggdrasil() {
 	n.multicast = &multicast.Multicast{}
 	n.tuntap = &tuntap.TunAdapter{}
 	n.meshname = &meshname.MeshnameServer{}
+	n.radv = &radv.RAdv{}
 	// Start the admin socket
 	n.admin.Init(&n.core, n.state, logger, nil)
 	if err := n.admin.Start(); err != nil {
@@ -236,6 +239,10 @@ func run_yggdrasil() {
 	// Start the DNS server
 	n.meshname.Init(&n.core, n.state, popConfig, logger, nil)
 	n.meshname.Start()
+
+	// Start Router Advertisement module
+	n.radv.Init(&n.core, n.state, popConfig, logger, nil)
+	n.radv.Start()
 
 	// Make some nice output that tells us what our IPv6 address and subnet are.
 	// This is just logged to stdout for the user.
@@ -281,6 +288,7 @@ func run_yggdrasil() {
 				n.tuntap.UpdateConfig(yggConfig)
 				n.multicast.UpdateConfig(yggConfig)
 				n.meshname.UpdateConfig(yggConfig, popConfig)
+				n.radv.UpdateConfig(yggConfig, popConfig)
 			} else {
 				logger.Errorln("Reloading config at runtime is only possible with -useconffile")
 			}
@@ -290,6 +298,7 @@ exit:
 }
 
 func (n *node) shutdown() {
+	n.radv.Stop()
 	n.meshname.Stop()
 	n.admin.Stop()
 	n.multicast.Stop()
