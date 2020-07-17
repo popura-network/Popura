@@ -2,7 +2,7 @@
 
 package radv
 
-// The linux platform specific tun parts
+// The linux platform specific parts
 
 import (
 	"io/ioutil"

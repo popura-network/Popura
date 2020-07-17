@@ -39,8 +39,8 @@ type node struct {
 	tuntap    module.Module // tuntap.TunAdapter
 	multicast module.Module // multicast.Multicast
 	admin     module.Module // admin.AdminSocket
-	meshname  popura.Module // *meshname.MeshnameServer
-	radv      popura.Module
+	meshname  popura.Module // meshname.MeshnameServer
+	radv      popura.Module // radv.RAdv
 }
 
 // Returns list of automatically selected peers
@@ -240,7 +240,7 @@ func run_yggdrasil() {
 	n.meshname.Init(&n.core, n.state, popConfig, logger, nil)
 	n.meshname.Start()
 
-	// Start RAdv
+	// Start Router Advertisement module
 	n.radv.Init(&n.core, n.state, popConfig, logger, nil)
 	n.radv.Start()
 

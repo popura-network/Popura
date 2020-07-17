@@ -18,8 +18,6 @@ import (
 	"github.com/popura-network/Popura/src/popura"
 )
 
-// TODO DNS RA Option https://tools.ietf.org/html/rfc8106
-
 var yggdrasilPrefixIP net.IP = net.ParseIP("200::")
 
 const (
@@ -46,7 +44,6 @@ func getSubnet(inputKey string) *net.IPNet {
 
 type RAdv struct {
 	log        *log.Logger
-	advertiser *time.Timer
 	conn       *ndp.Conn
 	pubEncKey  string
 	config     popura.RAdvConfig
@@ -126,6 +123,41 @@ func (s *RAdv) Start() error {
 	return nil
 }
 
+// Send RA messages when triggered
+func (s *RAdv) advertiserTask(advTrigger chan struct{}) {
+	for {
+		select {
+		case <-s.quit:
+			return
+		case <-advTrigger:
+			err := s.conn.WriteTo(s.message, nil, net.IPv6linklocalallnodes)
+			if err != nil {
+				s.log.Debugln(err)
+			}
+		}
+	}
+}
+
+// Listen to Router Solicitation messages to trigger RAs
+func (s *RAdv) listener(advTrigger chan struct{}) {
+	for {
+		select {
+		case <-s.quit:
+			return
+		default:
+			msg, _, _, err := s.conn.ReadFrom()
+			if err != nil {
+				s.log.Debug(err)
+				continue
+			}
+			if _, ok := msg.(*ndp.RouterSolicitation); ok {
+				advTrigger <- struct{}{}
+			}
+		}
+	}
+}
+
+// Trigger RAs periodically
 func (s *RAdv) multicast(advTrigger chan struct{}) {
 	prng := rand.New(rand.NewSource(time.Now().UnixNano()))
 
@@ -164,44 +196,8 @@ func multicastDelay(r *rand.Rand, i int) time.Duration {
 	return d
 }
 
-func (s *RAdv) advertiserTask(advTrigger chan struct{}) {
-	for {
-		select {
-		case <-s.quit:
-			return
-		case <-advTrigger:
-			err := s.conn.WriteTo(s.message, nil, net.IPv6linklocalallnodes)
-			if err != nil {
-				s.log.Debugln(err)
-			}
-		}
-	}
-}
-
-func (s *RAdv) listener(advTrigger chan struct{}) {
-	for {
-		select {
-		case <-s.quit:
-			return
-		default:
-			msg, _, _, err := s.conn.ReadFrom()
-			if err != nil {
-				s.log.Debug(err)
-				continue
-			}
-			if _, ok := msg.(*ndp.RouterSolicitation); ok {
-				advTrigger <- struct{}{}
-			}
-		}
-	}
-}
-
 func (s *RAdv) Stop() error {
 	close(s.quit)
-
-	if s.advertiser != nil {
-		s.advertiser.Stop()
-	}
 
 	if s.conn != nil {
 		s.conn.Close()
