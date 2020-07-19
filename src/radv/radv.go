@@ -45,7 +45,6 @@ func getSubnet(inputKey string) *net.IPNet {
 type RAdv struct {
 	log        *log.Logger
 	conn       *ndp.Conn
-	pubEncKey  string
 	config     popura.RAdvConfig
 	message    *ndp.RouterAdvertisement
 	subnet     *net.IPNet
@@ -55,9 +54,9 @@ type RAdv struct {
 func (s *RAdv) Init(core *yggdrasil.Core, state *config.NodeState, popConfig *popura.PopuraConfig, log *log.Logger, options interface{}) error {
 	yggConfig := state.GetCurrent()
 
-	s.pubEncKey = yggConfig.EncryptionPublicKey
-	s.config = popConfig.RAdv
 	s.log = log
+	s.subnet = getSubnet(yggConfig.EncryptionPublicKey)
+	s.config = popConfig.RAdv
 	s.quit = make(chan struct{}, 2)
 
 	return nil
@@ -81,7 +80,6 @@ func (s *RAdv) Start() error {
 			return err
 		}
 
-		s.subnet = getSubnet(s.pubEncKey)
 		if s.config.SetGatewayIP {
 			s.setGatewayIP()
 		}
@@ -209,7 +207,7 @@ func (s *RAdv) Stop() error {
 
 func (s *RAdv) UpdateConfig(yggConfig *config.NodeConfig, popConfig *popura.PopuraConfig) {
 	s.Stop()
-	s.pubEncKey = yggConfig.EncryptionPublicKey
+	s.subnet = getSubnet(yggConfig.EncryptionPublicKey)
 	s.config = popConfig.RAdv
 	s.quit = make(chan struct{}, 2)
 	s.Start()
