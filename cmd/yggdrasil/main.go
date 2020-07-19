@@ -41,14 +41,7 @@ type node struct {
 	admin     module.Module // admin.AdminSocket
 	meshname  popura.Module // meshname.MeshnameServer
 	radv      popura.Module // radv.RAdv
-}
-
-// Returns list of automatically selected peers
-func getAutoPeers() []string {
-	peers := autopeering.RandomPick(autopeering.GetClosestPeers(autopeering.HighCapPeers, 10), 2)
-	peers = append(peers, autopeering.RandomPick(autopeering.GetClosestPeers(autopeering.LowCapPeers, 3), 1)...)
-
-	return peers
+	autopeering      popura.Module // autopeering.AutoPeering
 }
 
 func setLogLevel(loglevel string, logger *log.Logger) {
@@ -210,6 +203,7 @@ func run_yggdrasil() {
 	n.tuntap = &tuntap.TunAdapter{}
 	n.meshname = &meshname.MeshnameServer{}
 	n.radv = &radv.RAdv{}
+	n.autopeering = &autopeering.AutoPeering{}
 	// Start the admin socket
 	n.admin.Init(&n.core, n.state, logger, nil)
 	if err := n.admin.Start(); err != nil {
@@ -244,6 +238,8 @@ func run_yggdrasil() {
 	n.radv.Init(&n.core, n.state, popConfig, logger, nil)
 	n.radv.Start()
 
+	n.autopeering.Init(&n.core, n.state, popConfig, logger, nil)
+
 	// Make some nice output that tells us what our IPv6 address and subnet are.
 	// This is just logged to stdout for the user.
 	address := n.core.Address()
@@ -261,11 +257,7 @@ func run_yggdrasil() {
 
 	// Setup auto peering
 	if *autopeer && len(yggConfig.Peers) == 0 {
-		for _, p := range getAutoPeers() {
-			if err := n.core.AddPeer(p, ""); err != nil {
-				logger.Infoln("Failed to connect to peer:", err)
-			}
-		}
+		n.autopeering.Start()
 	}
 
 	if *dhtcrawlenable {
@@ -298,6 +290,7 @@ exit:
 }
 
 func (n *node) shutdown() {
+	n.autopeering.Stop()
 	n.radv.Stop()
 	n.meshname.Stop()
 	n.admin.Stop()
