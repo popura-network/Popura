@@ -236,7 +236,9 @@ func run_yggdrasil() {
 
 	// Start Router Advertisement module
 	n.radv.Init(&n.core, n.state, popConfig, logger, nil)
-	n.radv.Start()
+	if err := n.radv.Start(); err != nil {
+		logger.Errorln("An error occured starting RAdv: ", err)
+	}
 
 	n.autopeering.Init(&n.core, n.state, popConfig, logger, nil)
 

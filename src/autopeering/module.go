@@ -13,17 +13,16 @@ import (
 )
 
 const (
-	linkLocalPrefix = "fe80"
-	autopeerTimeout = time.Minute
+	linkLocalPrefix  = "fe80"
+	autopeerTimeout  = time.Minute
 	peerCheckTimeout = 10 * time.Second
 )
 
 type AutoPeering struct {
-	core       *yggdrasil.Core
-	log    *log.Logger
+	core           *yggdrasil.Core
+	log            *log.Logger
 	checkPeerTimer *time.Timer
-	hadPeers time.Time
-	config *config.NodeState
+	hadPeers       time.Time
 }
 
 func (ap *AutoPeering) Init(core *yggdrasil.Core, state *config.NodeState, popConfig *popura.PopuraConfig, log *log.Logger, options interface{}) error {
@@ -58,7 +57,7 @@ func (ap *AutoPeering) checkPeerLoop() {
 
 	if havePeers {
 		ap.hadPeers = time.Now()
-	} else if time.Now().Sub(ap.hadPeers) > autopeerTimeout {
+	} else if time.Since(ap.hadPeers) > autopeerTimeout {
 		ap.hadPeers = time.Now()
 		peers := RandomPick(GetClosestPeers(PublicPeers, 10), 1)
 		if len(peers) == 1 {
@@ -75,5 +74,5 @@ func (ap *AutoPeering) checkPeerLoop() {
 }
 
 func (ap *AutoPeering) UpdateConfig(yggConfig *config.NodeConfig, popConfig *popura.PopuraConfig) {}
-func (ap *AutoPeering) SetupAdminHandlers(a *admin.AdminSocket) {}
-func (ap *AutoPeering) IsStarted() bool { return false }
+func (ap *AutoPeering) SetupAdminHandlers(a *admin.AdminSocket)                                   {}
+func (ap *AutoPeering) IsStarted() bool                                                           { return false }

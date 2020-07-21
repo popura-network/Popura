@@ -43,12 +43,12 @@ func getSubnet(inputKey string) *net.IPNet {
 }
 
 type RAdv struct {
-	log        *log.Logger
-	conn       *ndp.Conn
-	config     popura.RAdvConfig
-	message    *ndp.RouterAdvertisement
-	subnet     *net.IPNet
-	quit       chan struct{}
+	log     *log.Logger
+	conn    *ndp.Conn
+	config  popura.RAdvConfig
+	message *ndp.RouterAdvertisement
+	subnet  *net.IPNet
+	quit    chan struct{}
 }
 
 func (s *RAdv) Init(core *yggdrasil.Core, state *config.NodeState, popConfig *popura.PopuraConfig, log *log.Logger, options interface{}) error {
@@ -81,7 +81,9 @@ func (s *RAdv) Start() error {
 		}
 
 		if s.config.SetGatewayIP {
-			s.setGatewayIP()
+			if err := s.setGatewayIP(); err != nil {
+				s.log.Errorln(err)
+			}
 		}
 
 		s.message = &ndp.RouterAdvertisement{
@@ -201,7 +203,9 @@ func (s *RAdv) Stop() error {
 		s.conn.Close()
 	}
 
-	s.removeGatewayIP()
+	if err := s.removeGatewayIP(); err != nil {
+		s.log.Errorln(err)
+	}
 	return nil
 }
 
@@ -210,7 +214,9 @@ func (s *RAdv) UpdateConfig(yggConfig *config.NodeConfig, popConfig *popura.Popu
 	s.subnet = getSubnet(yggConfig.EncryptionPublicKey)
 	s.config = popConfig.RAdv
 	s.quit = make(chan struct{}, 2)
-	s.Start()
+	if err := s.Start(); err != nil {
+		s.log.Errorln("An error occured starting RAdv: ", err)
+	}
 }
 
 func (s *RAdv) SetupAdminHandlers(a *admin.AdminSocket) {}

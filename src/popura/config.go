@@ -16,7 +16,7 @@ import (
 
 type PopuraConfig struct {
 	Meshname MeshnameConfig `comment:"DNS server description"`
-	RAdv RAdvConfig `comment:"Router Advertisement settings"`
+	RAdv     RAdvConfig     `comment:"Router Advertisement settings"`
 }
 
 type MeshnameConfig struct {
@@ -26,9 +26,9 @@ type MeshnameConfig struct {
 }
 
 type RAdvConfig struct {
-	Enable bool `comment:"Enable or disable Router Advertisement"`
-	Interface string `comment:"Send router advertisement for this network interface"`
-	SetGatewayIP bool `comment:"Set IP address on the Interface automatically"`
+	Enable       bool   `comment:"Enable or disable Router Advertisement"`
+	Interface    string `comment:"Send router advertisement for this network interface"`
+	SetGatewayIP bool   `comment:"Set IP address on the Interface automatically"`
 }
 
 func GenerateConfig() (*config.NodeConfig, *PopuraConfig) {

@@ -2,6 +2,10 @@
 
 package radv
 
+import (
+	"errors"
+)
+
 // Display a warning if IPv6 forwarding is disabled
 func (s *RAdv) checkForwardingEnabled() {
 	s.log.Debugln("Not implemented")
@@ -9,14 +13,10 @@ func (s *RAdv) checkForwardingEnabled() {
 
 // Add IP address to the network interface
 func (s *RAdv) setGatewayIP() error {
-	s.log.Debugln("Not implemented")
-
-	return nil
+	return errors.New("RAdv: setGatewayIP is not implemented on your platform")
 }
 
 // Remove IP address to the network interface
 func (s *RAdv) removeGatewayIP() error {
-	s.log.Debugln("Not implemented")
-
-	return nil
+	return errors.New("RAdv: removeGatewayIP is not implemented on your platform")
 }
