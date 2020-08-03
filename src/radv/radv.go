@@ -86,31 +86,39 @@ func (s *RAdv) Start() error {
 			}
 		}
 
+		routerLifetime := time.Second * 0
+		options := []ndp.Option{
+			&ndp.PrefixInformation{
+				PrefixLength:                   64,
+				OnLink:                         true,
+				AutonomousAddressConfiguration: true,
+				ValidLifetime:                  time.Second * 86400,
+				PreferredLifetime:              time.Second * 14400,
+				Prefix:                         s.subnet.IP,
+			},
+			&ndp.LinkLayerAddress{Direction: ndp.Source, Addr: ifi.HardwareAddr},
+		}
+
+		if s.config.DefaultRouter {
+			routerLifetime = time.Second * 1800
+		} else {
+			options = append(options, &ndp.RouteInformation{
+				PrefixLength: 7,
+				Preference: ndp.Medium,
+				RouteLifetime: time.Second * 1800,
+				Prefix: yggdrasilPrefixIP,
+			})
+		}
+
 		s.message = &ndp.RouterAdvertisement{
 			CurrentHopLimit:           64,
 			ManagedConfiguration:      false,
 			OtherConfiguration:        false,
 			RouterSelectionPreference: ndp.Medium,
-			RouterLifetime:            time.Second * 0,
+			RouterLifetime:            routerLifetime,
 			ReachableTime:             time.Second * 0,
 			RetransmitTimer:           time.Second * 0,
-			Options: []ndp.Option{
-				&ndp.PrefixInformation{
-					PrefixLength:                   64,
-					OnLink:                         true,
-					AutonomousAddressConfiguration: true,
-					ValidLifetime:                  time.Second * 86400,
-					PreferredLifetime:              time.Second * 14400,
-					Prefix:                         s.subnet.IP,
-				},
-				&ndp.RouteInformation{
-					PrefixLength:  7,
-					Preference:    ndp.Medium,
-					RouteLifetime: time.Second * 1800,
-					Prefix:        yggdrasilPrefixIP,
-				},
-				&ndp.LinkLayerAddress{Direction: ndp.Source, Addr: ifi.HardwareAddr},
-			},
+			Options: options,
 		}
 
 		advTrigger := make(chan struct{})

@@ -29,6 +29,7 @@ type RAdvConfig struct {
 	Enable       bool   `comment:"Enable or disable Router Advertisement"`
 	Interface    string `comment:"Send router advertisement for this network interface"`
 	SetGatewayIP bool   `comment:"Set IP address on the Interface automatically"`
+	DefaultRouter       bool   `comment:"Advertise a default router (a fix for Android)"`
 }
 
 func GenerateConfig() (*config.NodeConfig, *PopuraConfig) {
@@ -41,6 +42,7 @@ func GenerateConfig() (*config.NodeConfig, *PopuraConfig) {
 	popConfig.RAdv.Enable = false
 	popConfig.RAdv.Interface = "eth0"
 	popConfig.RAdv.SetGatewayIP = true
+	popConfig.RAdv.DefaultRouter = false
 
 	return config.GenerateConfig(), &popConfig
 }
