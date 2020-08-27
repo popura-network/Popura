@@ -30,6 +30,7 @@ type RAdvConfig struct {
 	Interface    string `comment:"Send router advertisement for this network interface"`
 	SetGatewayIP bool   `comment:"Set IP address on the Interface automatically"`
 	DefaultRouter       bool   `comment:"Advertise a default router (a fix for Android)"`
+	DNS bool   `comment:"Advertise this router as a DNS server (RFC 8106)"`
 }
 
 func GenerateConfig() (*config.NodeConfig, *PopuraConfig) {
@@ -43,6 +44,7 @@ func GenerateConfig() (*config.NodeConfig, *PopuraConfig) {
 	popConfig.RAdv.Interface = "eth0"
 	popConfig.RAdv.SetGatewayIP = true
 	popConfig.RAdv.DefaultRouter = false
+	popConfig.RAdv.DNS = false
 
 	return config.GenerateConfig(), &popConfig
 }

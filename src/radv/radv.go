@@ -110,6 +110,13 @@ func (s *RAdv) Start() error {
 			})
 		}
 
+		if s.config.DNS {
+			options = append(options, &ndp.RecursiveDNSServer{
+				Lifetime: time.Second * 4294967295,
+				Servers: []net.IP{ ip },
+			})
+		}
+
 		s.message = &ndp.RouterAdvertisement{
 			CurrentHopLimit:           64,
 			ManagedConfiguration:      false,
