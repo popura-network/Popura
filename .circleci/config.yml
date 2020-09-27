@@ -214,13 +214,8 @@ workflows:
   version: 2.1
   build:
     jobs:
-      - lint
-      - build-linux:
-          requires:
-            - lint
-      - build-other:
-          requires:
-            - lint
+      - build-linux
+      - build-other
       - upload:
           requires:
             - build-linux
