@@ -63,6 +63,8 @@ github.com/zhoreeq/meshname v0.0.0-20200517140506-5c5e93874284 h1:BziJ6xfXSA7u8J
 github.com/zhoreeq/meshname v0.0.0-20200517140506-5c5e93874284/go.mod h1:3I8MpFZ304bAYiD+e+ovlMDDZat8aKyUlqllUok4qm0=
 github.com/zhoreeq/meshname v0.0.0-20200519200412-cad772d30578 h1:xmEYsm95dzBKWEYTmDdGJer1geUd52WctSXTW84U9ns=
 github.com/zhoreeq/meshname v0.0.0-20200519200412-cad772d30578/go.mod h1:3I8MpFZ304bAYiD+e+ovlMDDZat8aKyUlqllUok4qm0=
+github.com/zhoreeq/meshname v0.1.0 h1:o7HlQeki4zxv+iorEhmmr4qRQdA2c43/+DLjeOO1Z6g=
+github.com/zhoreeq/meshname v0.1.0/go.mod h1:3I8MpFZ304bAYiD+e+ovlMDDZat8aKyUlqllUok4qm0=
 gitlab.com/golang-commonmark/puny v0.0.0-20191124015043-9f83538fa04f h1:Wku8eEdeJqIOFHtrfkYUByc4bCaTeA6fL0UJgfEiFMI=
 gitlab.com/golang-commonmark/puny v0.0.0-20191124015043-9f83538fa04f/go.mod h1:Tiuhl+njh/JIg0uS/sOJVYi0x2HEa5rc1OAaVsb5tAs=
 golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACkg1iLfiJU5Ep61QUkGW8qpdssI0+w=

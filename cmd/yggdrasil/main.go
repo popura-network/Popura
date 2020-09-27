@@ -24,7 +24,7 @@ import (
 	"github.com/yggdrasil-network/yggdrasil-go/src/version"
 	"github.com/yggdrasil-network/yggdrasil-go/src/yggdrasil"
 
-	_meshname "github.com/zhoreeq/meshname/src/meshname"
+	_meshname "github.com/zhoreeq/meshname/pkg/meshname"
 
 	"github.com/popura-network/Popura/src/autopeering"
 	"github.com/popura-network/Popura/src/dhtcrawler"

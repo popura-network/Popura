@@ -17,7 +17,7 @@ require (
 	github.com/vishvananda/netlink v1.1.0
 	github.com/vishvananda/netns v0.0.0-20200520041808-52d707b772fe // indirect
 	github.com/yggdrasil-network/yggdrasil-go v0.3.14
-	github.com/zhoreeq/meshname v0.0.0-20200519200412-cad772d30578
+	github.com/zhoreeq/meshname v0.1.0
 	golang.org/x/crypto v0.0.0-20200510223506-06a226fb4e37 // indirect
 	golang.org/x/net v0.0.0-20200602114024-627f9648deb9
 	golang.org/x/text v0.3.3-0.20191230102452-929e72ca90de

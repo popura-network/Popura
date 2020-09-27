@@ -9,7 +9,7 @@ import (
 	"github.com/yggdrasil-network/yggdrasil-go/src/config"
 	"github.com/yggdrasil-network/yggdrasil-go/src/yggdrasil"
 
-	_meshname "github.com/zhoreeq/meshname/src/meshname"
+	_meshname "github.com/zhoreeq/meshname/pkg/meshname"
 
 	"github.com/popura-network/Popura/src/popura"
 )
@@ -22,13 +22,16 @@ type MeshnameServer struct {
 
 func (s *MeshnameServer) Init(core *yggdrasil.Core, state *config.NodeState, popConfig *popura.PopuraConfig, log *log.Logger, options interface{}) error {
 	s.log = log
-	s.server = &_meshname.MeshnameServer{}
-	s.server.Init(log, popConfig.Meshname.Listen)
-	yggIPNet := &net.IPNet{IP: net.ParseIP("200::"), Mask: net.CIDRMask(7, 128)}
 	s.enable = popConfig.Meshname.Enable
-	s.server.SetNetworks(map[string]*net.IPNet{"ygg": yggIPNet, "meshname": yggIPNet})
-	if zoneConfig, err := _meshname.ParseZoneConfigMap(popConfig.Meshname.Config); err == nil {
-		s.server.SetZoneConfig(zoneConfig)
+	yggIPNet := &net.IPNet{IP: net.ParseIP("200::"), Mask: net.CIDRMask(7, 128)}
+	s.server = _meshname.New(
+		log,
+		popConfig.Meshname.Listen,
+		map[string]*net.IPNet{"ygg": yggIPNet, "meshname": yggIPNet},
+	)
+
+	if dnsRecords, err := _meshname.ParseDNSRecordsMap(popConfig.Meshname.Config); err == nil {
+		s.server.ConfigureDNSRecords(dnsRecords)
 	} else {
 		s.log.Errorln("meshname: Failed to parse Meshname config:", err)
 	}
@@ -45,13 +48,14 @@ func (s *MeshnameServer) Start() error {
 }
 
 func (s *MeshnameServer) Stop() error {
-	return s.server.Stop()
+	s.server.Stop()
+	return nil
 }
 
 func (s *MeshnameServer) UpdateConfig(yggConfig *config.NodeConfig, popConfig *popura.PopuraConfig) {
 	// TODO Handle Enable/Disable and Listen
-	if zoneConfig, err := _meshname.ParseZoneConfigMap(popConfig.Meshname.Config); err == nil {
-		s.server.SetZoneConfig(zoneConfig)
+	if dnsRecords, err := _meshname.ParseDNSRecordsMap(popConfig.Meshname.Config); err == nil {
+		s.server.ConfigureDNSRecords(dnsRecords)
 	} else {
 		s.log.Errorln("meshname: Failed to parse Meshname config:", err)
 	}
