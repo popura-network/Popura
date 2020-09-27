@@ -214,10 +214,11 @@ workflows:
   version: 2.1
   build:
     jobs:
-      - build-linux
+      - lint
+      - build-linux:
           requires:
             - lint
-      - build-other
+      - build-other:
           requires:
             - lint
       - upload:
