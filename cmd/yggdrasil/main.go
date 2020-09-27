@@ -138,7 +138,7 @@ func run_yggdrasil() {
 	getNodeID := func() *crypto.NodeID {
 		if pubkey, err := hex.DecodeString(yggConfig.EncryptionPublicKey); err == nil {
 			var box crypto.BoxPubKey
-			copy(box[:], pubkey[:])
+			copy(box[:], pubkey)
 			return crypto.GetNodeID(&box)
 		}
 		return nil
@@ -272,9 +272,9 @@ func run_yggdrasil() {
 	// deferred Stop function above will run which will shut down TUN/TAP.
 	for {
 		select {
-		case _ = <-c:
+		case <-c:
 			goto exit
-		case _ = <-r:
+		case <-r:
 			if *useconffile != "" {
 				yggConfig, popConfig = popura.LoadConfig(useconf, useconffile, normaliseconf)
 				logger.Infoln("Reloading configuration from", *useconffile)
