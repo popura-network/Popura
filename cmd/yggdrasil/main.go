@@ -86,6 +86,7 @@ func run_yggdrasil() {
 	getsnet := flag.Bool("subnet", false, "returns the IPv6 subnet as derived from the supplied configuration")
 	meshnameconf := flag.String("meshnameconf", "", "prints example Meshname.Config config value for a specified IP address")
 	dhtcrawlenable := flag.Bool("dhtcrawler", false, "Enable getDHTCrawl AdminAPI method")
+	withpeers := flag.Int("withpeers", 0, "generate a config with N number of alive peers")
 	loglevel := flag.String("loglevel", "info", "loglevel to enable")
 	flag.Parse()
 
@@ -115,6 +116,10 @@ func run_yggdrasil() {
 	case *genconf:
 		// Generate a new configuration and print it to stdout.
 		yggConfig, popConfig = popura.GenerateConfig()
+		if *withpeers > 0 {
+			apeers := autopeering.RandomPick(autopeering.GetClosestPeers(autopeering.PublicPeers, 10), *withpeers)
+			yggConfig.Peers = append(yggConfig.Peers, apeers...)
+		}
 		fmt.Println(popura.SaveConfig(*yggConfig, *popConfig, *confjson))
 		return
 	case *meshnameconf != "":
