@@ -1,6 +1,9 @@
 package autopeering
 
 import (
+	"fmt"
+	"net/url"
+	"os"
 	"time"
 
 	"github.com/gologme/log"
@@ -23,13 +26,29 @@ type AutoPeering struct {
 	log            *log.Logger
 	checkPeerTimer *time.Timer
 	hadPeers       time.Time
+	proxyURL       *url.URL
+	publicPeers    *[]string
 }
 
 func (ap *AutoPeering) Init(core *yggdrasil.Core, state *config.NodeState, popConfig *popura.PopuraConfig, log *log.Logger, options interface{}) error {
 	ap.core = core
 	ap.log = log
 
-	return nil
+	proxyEnv := os.Getenv("ALL_PROXY")
+	if proxyEnv == "" {
+		proxyEnv = os.Getenv("all_proxy")
+	}
+
+	if proxyEnv == "" {
+		ap.publicPeers = &PublicPeers
+	} else {
+		tcpPeers := GetTcpPeers()
+		ap.publicPeers = &tcpPeers
+	}
+
+	var err error
+	ap.proxyURL, err = url.Parse(proxyEnv)
+	return err
 }
 
 func (ap *AutoPeering) Start() error {
@@ -59,10 +78,12 @@ func (ap *AutoPeering) checkPeerLoop() {
 		ap.hadPeers = time.Now()
 	} else if time.Since(ap.hadPeers) > autopeerTimeout {
 		ap.hadPeers = time.Now()
-		peers := RandomPick(GetClosestPeers(PublicPeers, 10), 1)
+		peers := RandomPick(GetClosestPeers(*ap.publicPeers, 10), 1)
 		if len(peers) == 1 {
-			ap.log.Infoln("autopeering: adding new peer", peers[0])
-			if err := ap.core.AddPeer(peers[0], ""); err != nil {
+			peerUri := ap.getPeerUri(peers[0])
+
+			ap.log.Infoln("autopeering: adding new peer", peerUri)
+			if err := ap.core.AddPeer(peerUri, ""); err != nil {
 				ap.log.Infoln("autopeering: Failed to connect to peer:", err)
 			}
 		}
@@ -71,6 +92,14 @@ func (ap *AutoPeering) checkPeerLoop() {
 	ap.checkPeerTimer = time.AfterFunc(peerCheckTimeout, func() {
 		ap.checkPeerLoop()
 	})
+}
+
+// Return peer URI with respect to proxy environment settings
+func (ap *AutoPeering) getPeerUri(uri string) string {
+	if !ap.proxyURL.IsAbs() {
+		return uri
+	}
+	return fmt.Sprintf("socks://%s/%s", ap.proxyURL.Host, uri[6:len(uri)])
 }
 
 func (ap *AutoPeering) UpdateConfig(yggConfig *config.NodeConfig, popConfig *popura.PopuraConfig) {}

@@ -1,11 +1,13 @@
 package autopeering
 
 import (
+	"context"
 	"math/rand"
-	"net"
 	"sort"
 	"strings"
 	"time"
+
+	"golang.org/x/net/proxy"
 )
 
 const defaultTimeout time.Duration = time.Duration(3) * time.Second
@@ -48,7 +50,10 @@ func testPeer(pstring string, results chan Peer) {
 		return
 	}
 
-	conn, err := net.DialTimeout(network, peer_addr[1], defaultTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
+	defer cancel()
+
+	conn, err := proxy.Dial(ctx, network, peer_addr[1])
 	if err == nil {
 		t1 := time.Now()
 		conn.Close()
@@ -100,4 +105,15 @@ func RandomPick(peerList []string, num int) []string {
 	}
 
 	return res
+}
+
+// Return tcp peers only since socks proxy can only work with those
+func GetTcpPeers() []string {
+	publicPeers := []string{}
+	for _, p := range PublicPeers {
+		if p[:3] == "tcp" {
+			publicPeers = append(publicPeers, p)
+		}
+	}
+	return publicPeers
 }
