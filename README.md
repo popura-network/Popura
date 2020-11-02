@@ -2,10 +2,29 @@
 
 Popura, an alternative Yggdrasil network client
 
-Popura uses the same Yggdrasil core API internally, but adds some useful and
+*Yggdrasil Network* is a peer-to-peer IPv6 network with link-local peer discovery, 
+automatic end-to-end encryption, distributed IP address allocation, and DHT-based routing information exchange.
+
+Popura uses the same Yggdrasil core API internally, but adds some useful 
 experimental features which the original client lacks.
 
-## Building
+By default, it works just like the original yggdrasil client, all features must be enabled manually. 
+Popura adds new command line flags and config file sections to control those features.
+
+## Features
+
+- [Autopeering](https://github.com/popura-network/Popura/wiki/Autopeering) over the Internet
+- Built-in decentralized DNS system [meshname](https://github.com/popura-network/Popura/wiki/Meshname)
+- Automatically connects every LAN device to the Yggdrasil Network by sending [Router Advertisements](https://github.com/popura-network/Popura/wiki/Router-Advertisement)
+
+## Installing
+
+- [Debian](https://github.com/popura-network/popura-debian-repo)
+- [Arch Linux](https://aur.archlinux.org/packages/popura-git/)
+- [OpenWRT](https://github.com/popura-network/hypermodem-packages)
+- [Windows](https://github.com/popura-network/Popura/releases)
+
+## Building from source
 
 1. Install Go
 2. Clone this repository
@@ -14,6 +33,8 @@ experimental features which the original client lacks.
 ## Information
 
 [Wiki](https://github.com/popura-network/Popura/wiki)
+
+[Blog](https://popura-network.github.io)
 
 [Telegram channel](https://t.me/PopuraChan)
 
