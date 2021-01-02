@@ -78,7 +78,7 @@ func run_yggdrasil() {
 	normaliseconf := flag.Bool("normaliseconf", false, "use in combination with either -useconf or -useconffile, outputs your configuration normalised")
 	confjson := flag.Bool("json", false, "print configuration from -genconf or -normaliseconf as JSON instead of HJSON")
 	autoconf := flag.Bool("autoconf", false, "automatic mode (dynamic IP, peer with IPv6 neighbors)")
-	autopeer := flag.Bool("autopeer", false, "automatic Internet peering (using peers from github.com/yggdrasil-network/public-peers)")
+	autopeer := flag.Bool("autopeer", true, "automatic Internet peering (using peers from github.com/yggdrasil-network/public-peers)")
 	ver := flag.Bool("version", false, "prints the version of this build")
 	logto := flag.String("logto", "stdout", "file path to log to, \"syslog\" or \"stdout\"")
 	getaddr := flag.Bool("address", false, "returns the IPv6 address as derived from the supplied configuration")
