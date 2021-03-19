@@ -1,24 +1,21 @@
 module github.com/popura-network/Popura
 
-go 1.13
+go 1.16
 
 require (
-	github.com/cheggaaa/pb/v3 v3.0.4
-	github.com/fatih/color v1.9.0 // indirect
+	github.com/cheggaaa/pb/v3 v3.0.6
 	github.com/gologme/log v1.2.0
 	github.com/hashicorp/go-syslog v1.0.0
-	github.com/hjson/hjson-go v3.0.2-0.20200316202735-d5d0e8b0617d+incompatible
-	github.com/kardianos/minwinsvc v0.0.0-20151122163309-cad6b2b879b0
-	github.com/mattn/go-colorable v0.1.6 // indirect
-	github.com/mattn/go-runewidth v0.0.9 // indirect
+	github.com/hjson/hjson-go v3.1.0+incompatible
+	github.com/kardianos/minwinsvc v1.0.0
 	github.com/mdlayher/ndp v0.0.0-20200602162440-17ab9e3e5567
-	github.com/miekg/dns v1.1.29 // indirect
-	github.com/mitchellh/mapstructure v1.3.0
+	github.com/miekg/dns v1.1.41 // indirect
+	github.com/mitchellh/mapstructure v1.4.1
 	github.com/vishvananda/netlink v1.1.0
-	github.com/vishvananda/netns v0.0.0-20200520041808-52d707b772fe // indirect
-	github.com/yggdrasil-network/yggdrasil-go v0.3.15
+	github.com/yggdrasil-network/yggdrasil-go v0.3.16
 	github.com/zhoreeq/meshname v0.1.0
-	golang.org/x/crypto v0.0.0-20200510223506-06a226fb4e37 // indirect
-	golang.org/x/net v0.0.0-20200602114024-627f9648deb9
-	golang.org/x/text v0.3.3-0.20191230102452-929e72ca90de
+	golang.org/x/crypto v0.0.0-20210317152858-513c2a44f670 // indirect
+	golang.org/x/net v0.0.0-20210316092652-d523dce5a7f4
+	golang.org/x/sys v0.0.0-20210319071255-635bc2c9138d // indirect
+	golang.org/x/text v0.3.6-0.20210220033129-8f690f22cf1c
 )
