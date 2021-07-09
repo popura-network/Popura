@@ -7,7 +7,7 @@ import (
 
 	"github.com/yggdrasil-network/yggdrasil-go/src/admin"
 	"github.com/yggdrasil-network/yggdrasil-go/src/config"
-	"github.com/yggdrasil-network/yggdrasil-go/src/yggdrasil"
+	"github.com/yggdrasil-network/yggdrasil-go/src/core"
 
 	_meshname "github.com/zhoreeq/meshname/pkg/meshname"
 
@@ -20,7 +20,7 @@ type MeshnameServer struct {
 	enable bool
 }
 
-func (s *MeshnameServer) Init(core *yggdrasil.Core, state *config.NodeState, popConfig *popura.PopuraConfig, log *log.Logger, options interface{}) error {
+func (s *MeshnameServer) Init(yggcore *core.Core, yggConfig *config.NodeConfig, popConfig *popura.PopuraConfig, log *log.Logger, options interface{}) error {
 	s.log = log
 	s.enable = popConfig.Meshname.Enable
 	yggIPNet := &net.IPNet{IP: net.ParseIP("200::"), Mask: net.CIDRMask(7, 128)}

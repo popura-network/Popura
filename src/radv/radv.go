@@ -1,7 +1,6 @@
 package radv
 
 import (
-	"encoding/hex"
 	"math/rand"
 	"net"
 	"time"
@@ -9,11 +8,9 @@ import (
 	"github.com/gologme/log"
 	"github.com/mdlayher/ndp"
 
-	"github.com/yggdrasil-network/yggdrasil-go/src/address"
 	"github.com/yggdrasil-network/yggdrasil-go/src/admin"
 	"github.com/yggdrasil-network/yggdrasil-go/src/config"
-	"github.com/yggdrasil-network/yggdrasil-go/src/crypto"
-	"github.com/yggdrasil-network/yggdrasil-go/src/yggdrasil"
+	"github.com/yggdrasil-network/yggdrasil-go/src/core"
 
 	"github.com/popura-network/Popura/src/popura"
 )
@@ -27,21 +24,6 @@ const (
 	maxDelay              = 600 * time.Second
 )
 
-// Get the subnet information from EncryptopnPublicKey
-func getSubnet(inputKey string) *net.IPNet {
-	pubkey, _ := hex.DecodeString(inputKey)
-	var box crypto.BoxPubKey
-	copy(box[:], pubkey[:])
-	nodeid := crypto.GetNodeID(&box)
-
-	snet := *address.SubnetForNodeID(nodeid)
-	ipnet := net.IPNet{
-		IP:   append(snet[:], 0, 0, 0, 0, 0, 0, 0, 0),
-		Mask: net.CIDRMask(len(snet)*8, 128),
-	}
-	return &ipnet
-}
-
 type RAdv struct {
 	log     *log.Logger
 	conn    *ndp.Conn
@@ -51,11 +33,9 @@ type RAdv struct {
 	quit    chan struct{}
 }
 
-func (s *RAdv) Init(core *yggdrasil.Core, state *config.NodeState, popConfig *popura.PopuraConfig, log *log.Logger, options interface{}) error {
-	yggConfig := state.GetCurrent()
-
+func (s *RAdv) Init(yggcore *core.Core, yggConfig *config.NodeConfig, popConfig *popura.PopuraConfig, log *log.Logger, options interface{}) error {
 	s.log = log
-	s.subnet = getSubnet(yggConfig.EncryptionPublicKey)
+	s.subnet = popura.SubnetFromKey(yggConfig.PrivateKey)
 	s.config = popConfig.RAdv
 	s.quit = make(chan struct{}, 2)
 
@@ -103,17 +83,17 @@ func (s *RAdv) Start() error {
 			routerLifetime = time.Second * 1800
 		} else {
 			options = append(options, &ndp.RouteInformation{
-				PrefixLength: 7,
-				Preference: ndp.Medium,
+				PrefixLength:  7,
+				Preference:    ndp.Medium,
 				RouteLifetime: time.Second * 1800,
-				Prefix: yggdrasilPrefixIP,
+				Prefix:        yggdrasilPrefixIP,
 			})
 		}
 
 		if s.config.DNS {
 			options = append(options, &ndp.RecursiveDNSServer{
 				Lifetime: time.Second * 4294967295,
-				Servers: []net.IP{ ip },
+				Servers:  []net.IP{ip},
 			})
 		}
 
@@ -125,7 +105,7 @@ func (s *RAdv) Start() error {
 			RouterLifetime:            routerLifetime,
 			ReachableTime:             time.Second * 0,
 			RetransmitTimer:           time.Second * 0,
-			Options: options,
+			Options:                   options,
 		}
 
 		advTrigger := make(chan struct{})
@@ -226,7 +206,7 @@ func (s *RAdv) Stop() error {
 
 func (s *RAdv) UpdateConfig(yggConfig *config.NodeConfig, popConfig *popura.PopuraConfig) {
 	s.Stop()
-	s.subnet = getSubnet(yggConfig.EncryptionPublicKey)
+	s.subnet = popura.SubnetFromKey(yggConfig.PrivateKey)
 	s.config = popConfig.RAdv
 	s.quit = make(chan struct{}, 2)
 	if err := s.Start(); err != nil {
