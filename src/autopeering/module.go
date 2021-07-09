@@ -10,7 +10,7 @@ import (
 
 	"github.com/yggdrasil-network/yggdrasil-go/src/admin"
 	"github.com/yggdrasil-network/yggdrasil-go/src/config"
-	"github.com/yggdrasil-network/yggdrasil-go/src/yggdrasil"
+	"github.com/yggdrasil-network/yggdrasil-go/src/core"
 
 	"github.com/popura-network/Popura/src/popura"
 )
@@ -22,7 +22,7 @@ const (
 )
 
 type AutoPeering struct {
-	core           *yggdrasil.Core
+	core           *core.Core
 	log            *log.Logger
 	checkPeerTimer *time.Timer
 	hadPeers       time.Time
@@ -30,8 +30,8 @@ type AutoPeering struct {
 	publicPeers    *[]string
 }
 
-func (ap *AutoPeering) Init(core *yggdrasil.Core, state *config.NodeState, popConfig *popura.PopuraConfig, log *log.Logger, options interface{}) error {
-	ap.core = core
+func (ap *AutoPeering) Init(yggcore *core.Core, yggConfig *config.NodeConfig, popConfig *popura.PopuraConfig, log *log.Logger, options interface{}) error {
+	ap.core = yggcore
 	ap.log = log
 
 	proxyEnv := os.Getenv("ALL_PROXY")
@@ -67,8 +67,8 @@ func (ap *AutoPeering) Stop() error {
 func (ap *AutoPeering) checkPeerLoop() {
 	havePeers := false
 
-	for _, p := range ap.core.GetSwitchPeers() {
-		if p.Endpoint[:4] != linkLocalPrefix {
+	for _, p := range ap.core.GetPeers() {
+		if p.Remote[:4] != linkLocalPrefix {
 			havePeers = true
 			break
 		}
@@ -83,7 +83,7 @@ func (ap *AutoPeering) checkPeerLoop() {
 			peerUri := ap.getPeerUri(peers[0])
 
 			ap.log.Infoln("autopeering: adding new peer", peerUri)
-			if err := ap.core.AddPeer(peerUri, ""); err != nil {
+			if err := ap.core.CallPeer(peerUri, ""); err != nil {
 				ap.log.Infoln("autopeering: Failed to connect to peer:", err)
 			}
 		}
@@ -95,11 +95,14 @@ func (ap *AutoPeering) checkPeerLoop() {
 }
 
 // Return peer URI with respect to proxy environment settings
-func (ap *AutoPeering) getPeerUri(uri string) string {
-	if !ap.proxyURL.IsAbs() {
-		return uri
+func (ap *AutoPeering) getPeerUri(uriString string) *url.URL {
+	if ap.proxyURL.IsAbs() {
+		uriString = fmt.Sprintf("socks://%s/%s", ap.proxyURL.Host, uriString[6:len(uriString)])
 	}
-	return fmt.Sprintf("socks://%s/%s", ap.proxyURL.Host, uri[6:len(uri)])
+
+	uri, _ := url.Parse(uriString)
+
+	return uri
 }
 
 func (ap *AutoPeering) UpdateConfig(yggConfig *config.NodeConfig, popConfig *popura.PopuraConfig) {}
