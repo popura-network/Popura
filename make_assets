@@ -7,7 +7,7 @@ PEER_LIST=${PEER_LIST:-"assets/peers.txt"}
 # Create peers.go "asset" file
 make_peers_go() {
     PEERS_GO_FILE="src/autopeering/peers.go"
-    printf "package autopeering\nvar PublicPeers = []string{\n" >$PEERS_GO_FILE
+    printf "package autopeering\n\nvar PublicPeers = []string{\n" >$PEERS_GO_FILE
     while IFS= read -r line
     do 
         printf "\t\"$line\",\n" >> $PEERS_GO_FILE
