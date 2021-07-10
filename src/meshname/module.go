@@ -27,7 +27,9 @@ func (s *MeshnameServer) Init(yggcore *core.Core, yggConfig *config.NodeConfig, 
 	s.server = _meshname.New(
 		log,
 		popConfig.Meshname.Listen,
-		map[string]*net.IPNet{"ygg": yggIPNet, "meshname": yggIPNet},
+		map[string]*net.IPNet{"ygg": yggIPNet, "meshname": yggIPNet, "vapordns": yggIPNet},
+		false, // enable meship protocol
+		false, // allow remote queries
 	)
 
 	if dnsRecords, err := _meshname.ParseDNSRecordsMap(popConfig.Meshname.Config); err == nil {

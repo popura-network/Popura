@@ -17,7 +17,7 @@ import (
 
 const (
 	linkLocalPrefix  = "fe80"
-	autopeerTimeout  = time.Minute
+	autopeerTimeout  = 30 * time.Second
 	peerCheckTimeout = 10 * time.Second
 )
 
@@ -69,6 +69,7 @@ func (ap *AutoPeering) checkPeerLoop() {
 
 	for _, p := range ap.core.GetPeers() {
 		if p.Remote[:4] != linkLocalPrefix {
+			ap.log.Debugln("autopeering: remote peer is connected ", p.Remote)
 			havePeers = true
 			break
 		}
@@ -77,15 +78,18 @@ func (ap *AutoPeering) checkPeerLoop() {
 	if havePeers {
 		ap.hadPeers = time.Now()
 	} else if time.Since(ap.hadPeers) > autopeerTimeout {
+		ap.log.Debugln("autopeering: adding a new peer")
 		ap.hadPeers = time.Now()
 		peers := RandomPick(GetClosestPeers(*ap.publicPeers, 10), 1)
 		if len(peers) == 1 {
 			peerUri := ap.getPeerUri(peers[0])
 
 			ap.log.Infoln("autopeering: adding new peer", peerUri)
-			if err := ap.core.CallPeer(peerUri, ""); err != nil {
-				ap.log.Infoln("autopeering: Failed to connect to peer:", err)
-			}
+			go func(){
+				if err := ap.core.CallPeer(peerUri, ""); err != nil {
+					ap.log.Infoln("autopeering: peer connection failed:", err)
+				}
+			}()
 		}
 	}
 
