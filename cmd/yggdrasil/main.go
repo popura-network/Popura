@@ -1,6 +1,8 @@
 package main
 
 import (
+	"context"
+	"crypto/ed25519"
 	"encoding/hex"
 	"flag"
 	"fmt"
@@ -17,30 +19,29 @@ import (
 	"github.com/yggdrasil-network/yggdrasil-go/src/address"
 	"github.com/yggdrasil-network/yggdrasil-go/src/admin"
 	"github.com/yggdrasil-network/yggdrasil-go/src/config"
-	"github.com/yggdrasil-network/yggdrasil-go/src/crypto"
-	"github.com/yggdrasil-network/yggdrasil-go/src/module"
+
+	"github.com/yggdrasil-network/yggdrasil-go/src/core"
 	"github.com/yggdrasil-network/yggdrasil-go/src/multicast"
 	"github.com/yggdrasil-network/yggdrasil-go/src/tuntap"
 	"github.com/yggdrasil-network/yggdrasil-go/src/version"
-	"github.com/yggdrasil-network/yggdrasil-go/src/yggdrasil"
 
 	_meshname "github.com/zhoreeq/meshname/pkg/meshname"
 
 	"github.com/popura-network/Popura/src/autopeering"
 	"github.com/popura-network/Popura/src/meshname"
-	"github.com/popura-network/Popura/src/radv"
 	"github.com/popura-network/Popura/src/popura"
+	"github.com/popura-network/Popura/src/radv"
 )
 
 type node struct {
-	core      yggdrasil.Core
-	state     *config.NodeState
-	tuntap    module.Module // tuntap.TunAdapter
-	multicast module.Module // multicast.Multicast
-	admin     module.Module // admin.AdminSocket
-	meshname  popura.Module // meshname.MeshnameServer
-	radv      popura.Module // radv.RAdv
-	autopeering      popura.Module // autopeering.AutoPeering
+	core        core.Core
+	config      *config.NodeConfig
+	tuntap      *tuntap.TunAdapter
+	multicast   *multicast.Multicast
+	admin       *admin.AdminSocket
+	meshname    popura.Module // meshname.MeshnameServer
+	radv        popura.Module // radv.RAdv
+	autopeering popura.Module // autopeering.AutoPeering
 }
 
 func setLogLevel(loglevel string, logger *log.Logger) {
@@ -69,9 +70,24 @@ func setLogLevel(loglevel string, logger *log.Logger) {
 	}
 }
 
-// The main function is responsible for configuring and starting Yggdrasil.
-func run_yggdrasil() {
-	// Configure the command line parameters.
+type yggArgs struct {
+	genconf       bool
+	useconf       bool
+	useconffile   string
+	normaliseconf bool
+	confjson      bool
+	autoconf      bool
+	ver           bool
+	logto         string
+	getaddr       bool
+	getsnet       bool
+	loglevel      string
+	autopeer      bool
+	meshnameconf  bool
+	withpeers     int
+}
+
+func getArgs() yggArgs {
 	genconf := flag.Bool("genconf", false, "print a new config to stdout")
 	useconf := flag.Bool("useconf", false, "read HJSON/JSON config from stdin")
 	useconffile := flag.String("useconffile", "", "read HJSON/JSON config from specified file path")
@@ -83,49 +99,101 @@ func run_yggdrasil() {
 	logto := flag.String("logto", "stdout", "file path to log to, \"syslog\" or \"stdout\"")
 	getaddr := flag.Bool("address", false, "returns the IPv6 address as derived from the supplied configuration")
 	getsnet := flag.Bool("subnet", false, "returns the IPv6 subnet as derived from the supplied configuration")
-	meshnameconf := flag.String("meshnameconf", "", "prints example Meshname.Config config value for a specified IP address")
+	meshnameconf := flag.Bool("meshnameconf", false, "use with -useconffile. Prints config with a default meshname DNS record")
 	withpeers := flag.Int("withpeers", 0, "generate a config with N number of alive peers")
 	loglevel := flag.String("loglevel", "info", "loglevel to enable")
 	flag.Parse()
+	return yggArgs{
+		genconf:       *genconf,
+		useconf:       *useconf,
+		useconffile:   *useconffile,
+		normaliseconf: *normaliseconf,
+		confjson:      *confjson,
+		autoconf:      *autoconf,
+		autopeer:      *autopeer,
+		ver:           *ver,
+		logto:         *logto,
+		getaddr:       *getaddr,
+		getsnet:       *getsnet,
+		meshnameconf:  *meshnameconf,
+		withpeers:     *withpeers,
+		loglevel:      *loglevel,
+	}
+}
+
+// The main function is responsible for configuring and starting Yggdrasil.
+func run(args yggArgs, ctx context.Context, done chan struct{}) {
+	defer close(done)
+	// Create a new logger that logs output to stdout.
+	var logger *log.Logger
+	switch args.logto {
+	case "stdout":
+		logger = log.New(os.Stdout, "", log.Flags())
+	case "syslog":
+		if syslogger, err := gsyslog.NewLogger(gsyslog.LOG_NOTICE, "DAEMON", version.BuildName()); err == nil {
+			logger = log.New(syslogger, "", log.Flags())
+		}
+	default:
+		if logfd, err := os.OpenFile(args.logto, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err == nil {
+			logger = log.New(logfd, "", log.Flags())
+		}
+	}
+	if logger == nil {
+		logger = log.New(os.Stdout, "", log.Flags())
+		logger.Warnln("Logging defaulting to stdout")
+	}
+
+	if args.normaliseconf {
+		setLogLevel("error", logger)
+	} else {
+		setLogLevel(args.loglevel, logger)
+	}
 
 	var yggConfig *config.NodeConfig
 	var popConfig *popura.PopuraConfig
 	var err error
 	switch {
-	case *ver:
+	case args.ver:
 		fmt.Println("Build name:", version.BuildName())
 		fmt.Println("Build version:", version.BuildVersion())
 		return
-	case *autoconf:
+	case args.autoconf:
 		// Use an autoconf-generated config, this will give us random keys and
 		// port numbers, and will use an automatically selected TUN/TAP interface.
 		yggConfig, popConfig = popura.GenerateConfig()
-	case *useconffile != "" || *useconf:
+	case args.useconffile != "" || args.useconf:
 		// Read the configuration from either stdin or from the filesystem
-		yggConfig, popConfig = popura.LoadConfig(useconf, useconffile, normaliseconf)
+		yggConfig, popConfig = popura.LoadConfig(&args.useconf, &args.useconffile, &args.normaliseconf)
 		// If the -normaliseconf option was specified then remarshal the above
 		// configuration and print it back to stdout. This lets the user update
 		// their configuration file with newly mapped names (like above) or to
 		// convert from plain JSON to commented HJSON.
-		if *normaliseconf {
-			fmt.Println(popura.SaveConfig(*yggConfig, *popConfig, *confjson))
+		if args.normaliseconf {
+			fmt.Println(popura.SaveConfig(*yggConfig, *popConfig, args.confjson))
 			return
 		}
-	case *genconf:
+
+		if args.meshnameconf {
+			ip := popura.AddressFromKey(yggConfig.PrivateKey)
+			subDomain := _meshname.DomainFromIP(ip)
+
+			defaultRecord := fmt.Sprintf("%s.vapordns AAAA %s", subDomain, ip.String())
+			meshnameConfig := make(map[string][]string)
+			meshnameConfig[subDomain] = []string{defaultRecord}
+
+			popConfig.Meshname.Enable = true
+			popConfig.Meshname.Config = meshnameConfig
+			fmt.Println(popura.SaveConfig(*yggConfig, *popConfig, args.confjson))
+			return
+		}
+	case args.genconf:
 		// Generate a new configuration and print it to stdout.
 		yggConfig, popConfig = popura.GenerateConfig()
-		if *withpeers > 0 {
-			apeers := autopeering.RandomPick(autopeering.GetClosestPeers(autopeering.PublicPeers, 10), *withpeers)
+		if args.withpeers > 0 {
+			apeers := autopeering.RandomPick(autopeering.GetClosestPeers(autopeering.PublicPeers, 10), args.withpeers)
 			yggConfig.Peers = append(yggConfig.Peers, apeers...)
 		}
-		fmt.Println(popura.SaveConfig(*yggConfig, *popConfig, *confjson))
-		return
-	case *meshnameconf != "":
-		if conf, err := _meshname.GenConf(*meshnameconf, "meshname."); err == nil {
-			fmt.Println(conf)
-		} else {
-			panic(err)
-		}
+		fmt.Println(popura.SaveConfig(*yggConfig, *popConfig, args.confjson))
 		return
 	default:
 		// No flags were provided, therefore print the list of flags to stdout.
@@ -138,25 +206,23 @@ func run_yggdrasil() {
 		return
 	}
 	// Have we been asked for the node address yet? If so, print it and then stop.
-	getNodeID := func() *crypto.NodeID {
-		if pubkey, err := hex.DecodeString(yggConfig.EncryptionPublicKey); err == nil {
-			var box crypto.BoxPubKey
-			copy(box[:], pubkey)
-			return crypto.GetNodeID(&box)
+	getNodeKey := func() ed25519.PublicKey {
+		if pubkey, err := hex.DecodeString(yggConfig.PrivateKey); err == nil {
+			return ed25519.PrivateKey(pubkey).Public().(ed25519.PublicKey)
 		}
 		return nil
 	}
 	switch {
-	case *getaddr:
-		if nodeid := getNodeID(); nodeid != nil {
-			addr := *address.AddrForNodeID(nodeid)
+	case args.getaddr:
+		if key := getNodeKey(); key != nil {
+			addr := address.AddrForKey(key)
 			ip := net.IP(addr[:])
 			fmt.Println(ip.String())
 		}
 		return
-	case *getsnet:
-		if nodeid := getNodeID(); nodeid != nil {
-			snet := *address.SubnetForNodeID(nodeid)
+	case args.getsnet:
+		if key := getNodeKey(); key != nil {
+			snet := address.SubnetForKey(key)
 			ipnet := net.IPNet{
 				IP:   append(snet[:], 0, 0, 0, 0, 0, 0, 0, 0),
 				Mask: net.CIDRMask(len(snet)*8, 128),
@@ -167,39 +233,16 @@ func run_yggdrasil() {
 	default:
 	}
 
-	// Create a new logger that logs output to stdout.
-	var logger *log.Logger
-	switch *logto {
-	case "stdout":
-		logger = log.New(os.Stdout, "", log.Flags())
-	case "syslog":
-		if syslogger, err := gsyslog.NewLogger(gsyslog.LOG_NOTICE, "DAEMON", version.BuildName()); err == nil {
-			logger = log.New(syslogger, "", log.Flags())
-		}
-	default:
-		if logfd, err := os.OpenFile(*logto, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err == nil {
-			logger = log.New(logfd, "", log.Flags())
-		}
-	}
-	if logger == nil {
-		logger = log.New(os.Stdout, "", log.Flags())
-		logger.Warnln("Logging defaulting to stdout")
-	}
-
-	setLogLevel(*loglevel, logger)
-
 	// Setup the Yggdrasil node itself. The node{} type includes a Core, so we
 	// don't need to create this manually.
-	n := node{}
+	n := node{config: yggConfig}
 	// Now start Yggdrasil - this starts the DHT, router, switch and other core
 	// components needed for Yggdrasil to operate
-	n.state, err = n.core.Start(yggConfig, logger)
-	if err != nil {
+	if err = n.core.Start(yggConfig, logger); err != nil {
 		logger.Errorln("An error occurred during startup")
 		panic(err)
 	}
 	// Register the session firewall gatekeeper function
-	n.core.SetSessionGatekeeper(n.sessionFirewall)
 	// Allocate our modules
 	n.admin = &admin.AdminSocket{}
 	n.multicast = &multicast.Multicast{}
@@ -208,159 +251,86 @@ func run_yggdrasil() {
 	n.radv = &radv.RAdv{}
 	n.autopeering = &autopeering.AutoPeering{}
 	// Start the admin socket
-	n.admin.Init(&n.core, n.state, logger, nil)
-	if err := n.admin.Start(); err != nil {
+	if err := n.admin.Init(&n.core, yggConfig, logger, nil); err != nil {
+		logger.Errorln("An error occurred initialising admin socket:", err)
+	} else if err := n.admin.Start(); err != nil {
 		logger.Errorln("An error occurred starting admin socket:", err)
 	}
-	n.admin.SetupAdminHandlers(n.admin.(*admin.AdminSocket))
+	n.admin.SetupAdminHandlers(n.admin)
 	// Start the multicast interface
-	n.multicast.Init(&n.core, n.state, logger, nil)
-	if err := n.multicast.Start(); err != nil {
+	if err := n.multicast.Init(&n.core, yggConfig, logger, nil); err != nil {
+		logger.Errorln("An error occurred initialising multicast:", err)
+	} else if err := n.multicast.Start(); err != nil {
 		logger.Errorln("An error occurred starting multicast:", err)
 	}
-	n.multicast.SetupAdminHandlers(n.admin.(*admin.AdminSocket))
+	n.multicast.SetupAdminHandlers(n.admin)
 	// Start the TUN/TAP interface
-	if listener, err := n.core.ConnListen(); err == nil {
-		if dialer, err := n.core.ConnDialer(); err == nil {
-			n.tuntap.Init(&n.core, n.state, logger, tuntap.TunOptions{Listener: listener, Dialer: dialer})
-			if err := n.tuntap.Start(); err != nil {
-				logger.Errorln("An error occurred starting TUN/TAP:", err)
-			}
-			n.tuntap.SetupAdminHandlers(n.admin.(*admin.AdminSocket))
-		} else {
-			logger.Errorln("Unable to get Dialer:", err)
-		}
-	} else {
-		logger.Errorln("Unable to get Listener:", err)
+	if err := n.tuntap.Init(&n.core, yggConfig, logger, nil); err != nil {
+		logger.Errorln("An error occurred initialising TUN/TAP:", err)
+	} else if err := n.tuntap.Start(); err != nil {
+		logger.Errorln("An error occurred starting TUN/TAP:", err)
 	}
+	n.tuntap.SetupAdminHandlers(n.admin)
 	// Start the DNS server
-	n.meshname.Init(&n.core, n.state, popConfig, logger, nil)
+	n.meshname.Init(&n.core, yggConfig, popConfig, logger, nil)
 	n.meshname.Start()
-
 	// Start Router Advertisement module
-	n.radv.Init(&n.core, n.state, popConfig, logger, nil)
+	n.radv.Init(&n.core, yggConfig, popConfig, logger, nil)
 	if err := n.radv.Start(); err != nil {
 		logger.Errorln("An error occured starting RAdv: ", err)
 	}
 
-	n.autopeering.Init(&n.core, n.state, popConfig, logger, nil)
+	n.autopeering.Init(&n.core, yggConfig, popConfig, logger, nil)
+	// Setup auto peering
+	if args.autopeer && len(yggConfig.Peers) == 0 {
+		n.autopeering.Start()
+	}
 
 	// Make some nice output that tells us what our IPv6 address and subnet are.
 	// This is just logged to stdout for the user.
 	address := n.core.Address()
 	subnet := n.core.Subnet()
+	public := n.core.GetSelf().Key
+	logger.Infof("Your public key is %s", hex.EncodeToString(public[:]))
 	logger.Infof("Your IPv6 address is %s", address.String())
 	logger.Infof("Your IPv6 subnet is %s", subnet.String())
 	// Catch interrupts from the operating system to exit gracefully.
-	c := make(chan os.Signal, 1)
-	r := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
-	signal.Notify(r, os.Interrupt, syscall.SIGHUP)
+	<-ctx.Done()
 	// Capture the service being stopped on Windows.
 	minwinsvc.SetOnExit(n.shutdown)
-	defer n.shutdown()
-
-	// Setup auto peering
-	if *autopeer && len(yggConfig.Peers) == 0 {
-		n.autopeering.Start()
-	}
-
-	// Wait for the terminate/interrupt signal. Once a signal is received, the
-	// deferred Stop function above will run which will shut down TUN/TAP.
-	for {
-		select {
-		case <-c:
-			goto exit
-		case <-r:
-			if *useconffile != "" {
-				yggConfig, popConfig = popura.LoadConfig(useconf, useconffile, normaliseconf)
-				logger.Infoln("Reloading configuration from", *useconffile)
-				n.core.UpdateConfig(yggConfig)
-				n.tuntap.UpdateConfig(yggConfig)
-				n.multicast.UpdateConfig(yggConfig)
-				n.meshname.UpdateConfig(yggConfig, popConfig)
-				n.radv.UpdateConfig(yggConfig, popConfig)
-			} else {
-				logger.Errorln("Reloading config at runtime is only possible with -useconffile")
-			}
-		}
-	}
-exit:
+	n.shutdown()
 }
 
 func (n *node) shutdown() {
-	n.autopeering.Stop()
-	n.radv.Stop()
-	n.meshname.Stop()
-	n.admin.Stop()
-	n.multicast.Stop()
-	n.tuntap.Stop()
+	_ = n.autopeering.Stop()
+	_ = n.radv.Stop()
+	_ = n.meshname.Stop()
+	_ = n.admin.Stop()
+	_ = n.multicast.Stop()
+	_ = n.tuntap.Stop()
 	n.core.Stop()
 }
 
-func (n *node) sessionFirewall(pubkey *crypto.BoxPubKey, initiator bool) bool {
-	n.state.Mutex.RLock()
-	defer n.state.Mutex.RUnlock()
-
-	// Allow by default if the session firewall is disabled
-	if !n.state.Current.SessionFirewall.Enable {
-		return true
-	}
-
-	// Prepare for checking whitelist/blacklist
-	var box crypto.BoxPubKey
-	// Reject blacklisted nodes
-	for _, b := range n.state.Current.SessionFirewall.BlacklistEncryptionPublicKeys {
-		key, err := hex.DecodeString(b)
-		if err == nil {
-			copy(box[:crypto.BoxPubKeyLen], key)
-			if box == *pubkey {
-				return false
-			}
-		}
-	}
-
-	// Allow whitelisted nodes
-	for _, b := range n.state.Current.SessionFirewall.WhitelistEncryptionPublicKeys {
-		key, err := hex.DecodeString(b)
-		if err == nil {
-			copy(box[:crypto.BoxPubKeyLen], key)
-			if box == *pubkey {
-				return true
-			}
-		}
-	}
-
-	// Allow outbound sessions if appropriate
-	if n.state.Current.SessionFirewall.AlwaysAllowOutbound {
-		if initiator {
-			return true
-		}
-	}
-
-	// Look and see if the pubkey is that of a direct peer
-	var isDirectPeer bool
-	for _, peer := range n.core.GetPeers() {
-		if peer.PublicKey == *pubkey {
-			isDirectPeer = true
-			break
-		}
-	}
-
-	// Allow direct peers if appropriate
-	if n.state.Current.SessionFirewall.AllowFromDirect && isDirectPeer {
-		return true
-	}
-
-	// Allow remote nodes if appropriate
-	if n.state.Current.SessionFirewall.AllowFromRemote && !isDirectPeer {
-		return true
-	}
-
-	// Finally, default-deny if not matching any of the above rules
-	return false
-}
-
 func main() {
-	run_yggdrasil()
+	args := getArgs()
+	hup := make(chan os.Signal, 1)
+	//signal.Notify(hup, os.Interrupt, syscall.SIGHUP)
+	term := make(chan os.Signal, 1)
+	signal.Notify(term, os.Interrupt, syscall.SIGTERM)
+	for {
+		done := make(chan struct{})
+		ctx, cancel := context.WithCancel(context.Background())
+		go run(args, ctx, done)
+		select {
+		case <-hup:
+			cancel()
+			<-done
+		case <-term:
+			cancel()
+			<-done
+			return
+		case <-done:
+			return
+		}
+	}
 }
