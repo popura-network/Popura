@@ -198,9 +198,12 @@ func (s *RAdv) Stop() error {
 		s.conn.Close()
 	}
 
-	if err := s.removeGatewayIP(); err != nil {
-		s.log.Errorln(err)
+	if s.config.Enable && s.config.SetGatewayIP {
+		if err := s.removeGatewayIP(); err != nil {
+			s.log.Errorln(err)
+		}
 	}
+
 	return nil
 }
 
