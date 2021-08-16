@@ -15,7 +15,6 @@ Popura adds new command line flags and config file sections to control those fea
 
 - [Autopeering](https://github.com/popura-network/Popura/wiki/Autopeering) over the Internet
 - Built-in decentralized DNS system [meshname](https://github.com/popura-network/Popura/wiki/Meshname)
-- Automatically connects every LAN device to the Yggdrasil Network by sending [Router Advertisements](https://github.com/popura-network/Popura/wiki/Router-Advertisement)
 
 ## Installing
 

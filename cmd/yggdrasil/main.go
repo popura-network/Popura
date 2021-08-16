@@ -30,7 +30,6 @@ import (
 	"github.com/popura-network/Popura/src/autopeering"
 	"github.com/popura-network/Popura/src/meshname"
 	"github.com/popura-network/Popura/src/popura"
-	"github.com/popura-network/Popura/src/radv"
 )
 
 type node struct {
@@ -40,7 +39,6 @@ type node struct {
 	multicast   *multicast.Multicast
 	admin       *admin.AdminSocket
 	meshname    popura.Module // meshname.MeshnameServer
-	radv        popura.Module // radv.RAdv
 	autopeering popura.Module // autopeering.AutoPeering
 }
 
@@ -248,7 +246,6 @@ func run(args yggArgs, ctx context.Context, done chan struct{}) {
 	n.multicast = &multicast.Multicast{}
 	n.tuntap = &tuntap.TunAdapter{}
 	n.meshname = &meshname.MeshnameServer{}
-	n.radv = &radv.RAdv{}
 	n.autopeering = &autopeering.AutoPeering{}
 	// Start the admin socket
 	if err := n.admin.Init(&n.core, yggConfig, logger, nil); err != nil {
@@ -274,11 +271,6 @@ func run(args yggArgs, ctx context.Context, done chan struct{}) {
 	// Start the DNS server
 	n.meshname.Init(&n.core, yggConfig, popConfig, logger, nil)
 	n.meshname.Start()
-	// Start Router Advertisement module
-	n.radv.Init(&n.core, yggConfig, popConfig, logger, nil)
-	if err := n.radv.Start(); err != nil {
-		logger.Errorln("An error occured starting RAdv: ", err)
-	}
 
 	n.autopeering.Init(&n.core, yggConfig, popConfig, logger, nil)
 	// Setup auto peering
@@ -303,7 +295,6 @@ func run(args yggArgs, ctx context.Context, done chan struct{}) {
 
 func (n *node) shutdown() {
 	_ = n.autopeering.Stop()
-	_ = n.radv.Stop()
 	_ = n.meshname.Stop()
 	_ = n.admin.Stop()
 	_ = n.multicast.Stop()
