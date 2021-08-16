@@ -203,6 +203,26 @@ func run(args yggArgs, ctx context.Context, done chan struct{}) {
 	if yggConfig == nil {
 		return
 	}
+
+	// i2p:// and onion:// peer URI support
+	i2pSocks := "socks://127.0.0.1:4447/"
+	onionSocks := "socks://127.0.0.1:9050/"
+
+	if os.Getenv("I2P_SOCKS") != "" {
+		i2pSocks = os.Getenv("I2P_SOCKS")
+	}
+	if os.Getenv("ONION_SOCKS") != "" {
+		onionSocks = os.Getenv("ONION_SOCKS")
+	}
+
+	for i, peer := range yggConfig.Peers {
+		if strings.HasPrefix(peer, "i2p:") {
+			yggConfig.Peers[i] = i2pSocks + peer[6:]
+		} else if strings.HasPrefix(peer, "onion:") {
+			yggConfig.Peers[i] =  onionSocks + peer[8:]
+		}
+	}
+
 	// Have we been asked for the node address yet? If so, print it and then stop.
 	getNodeKey := func() ed25519.PublicKey {
 		if pubkey, err := hex.DecodeString(yggConfig.PrivateKey); err == nil {
