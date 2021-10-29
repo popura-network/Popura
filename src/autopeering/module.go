@@ -1,9 +1,8 @@
 package autopeering
 
 import (
-	"fmt"
 	"net/url"
-	"os"
+	"strings"
 	"time"
 
 	"github.com/gologme/log"
@@ -16,7 +15,7 @@ import (
 )
 
 const (
-	linkLocalPrefix  = "fe80"
+	linkLocalPrefix  = "tls://[fe80"
 	autopeerTimeout  = 30 * time.Second
 	peerCheckTimeout = 10 * time.Second
 )
@@ -26,29 +25,14 @@ type AutoPeering struct {
 	log            *log.Logger
 	checkPeerTimer *time.Timer
 	hadPeers       time.Time
-	proxyURL       *url.URL
-	publicPeers    *[]string
+	peers          []url.URL
 }
 
 func (ap *AutoPeering) Init(yggcore *core.Core, yggConfig *config.NodeConfig, popConfig *popura.PopuraConfig, log *log.Logger, options interface{}) error {
 	ap.core = yggcore
 	ap.log = log
-
-	proxyEnv := os.Getenv("ALL_PROXY")
-	if proxyEnv == "" {
-		proxyEnv = os.Getenv("all_proxy")
-	}
-
-	if proxyEnv == "" {
-		ap.publicPeers = &PublicPeers
-	} else {
-		tcpPeers := GetTcpPeers()
-		ap.publicPeers = &tcpPeers
-	}
-
-	var err error
-	ap.proxyURL, err = url.Parse(proxyEnv)
-	return err
+	ap.peers = GetPublicPeers()
+	return nil
 }
 
 func (ap *AutoPeering) Start() error {
@@ -68,7 +52,7 @@ func (ap *AutoPeering) checkPeerLoop() {
 	havePeers := false
 
 	for _, p := range ap.core.GetPeers() {
-		if p.Remote[:4] != linkLocalPrefix {
+		if !strings.HasPrefix(p.Remote, linkLocalPrefix) {
 			ap.log.Debugln("autopeering: remote peer is connected ", p.Remote)
 			havePeers = true
 			break
@@ -80,13 +64,13 @@ func (ap *AutoPeering) checkPeerLoop() {
 	} else if time.Since(ap.hadPeers) > autopeerTimeout {
 		ap.log.Debugln("autopeering: adding a new peer")
 		ap.hadPeers = time.Now()
-		peers := RandomPick(GetClosestPeers(*ap.publicPeers, 10), 1)
+		peers := RandomPick(GetClosestPeers(ap.peers, 10), 1)
 		if len(peers) == 1 {
-			peerUri := ap.getPeerUri(peers[0])
+			peerUri := peers[0]
 
-			ap.log.Infoln("autopeering: adding new peer", peerUri)
-			go func(){
-				if err := ap.core.CallPeer(peerUri, ""); err != nil {
+			ap.log.Infoln("autopeering: adding new peer", peerUri.String())
+			go func() {
+				if err := ap.core.CallPeer(&peerUri, ""); err != nil {
 					ap.log.Infoln("autopeering: peer connection failed:", err)
 				}
 			}()
@@ -96,17 +80,6 @@ func (ap *AutoPeering) checkPeerLoop() {
 	ap.checkPeerTimer = time.AfterFunc(peerCheckTimeout, func() {
 		ap.checkPeerLoop()
 	})
-}
-
-// Return peer URI with respect to proxy environment settings
-func (ap *AutoPeering) getPeerUri(uriString string) *url.URL {
-	if ap.proxyURL.IsAbs() {
-		uriString = fmt.Sprintf("socks://%s/%s", ap.proxyURL.Host, uriString[6:len(uriString)])
-	}
-
-	uri, _ := url.Parse(uriString)
-
-	return uri
 }
 
 func (ap *AutoPeering) UpdateConfig(yggConfig *config.NodeConfig, popConfig *popura.PopuraConfig) {}

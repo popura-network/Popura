@@ -188,8 +188,10 @@ func run(args yggArgs, ctx context.Context, done chan struct{}) {
 		// Generate a new configuration and print it to stdout.
 		yggConfig, popConfig = popura.GenerateConfig()
 		if args.withpeers > 0 {
-			apeers := autopeering.RandomPick(autopeering.GetClosestPeers(autopeering.PublicPeers, 10), args.withpeers)
-			yggConfig.Peers = append(yggConfig.Peers, apeers...)
+			apeers := autopeering.RandomPick(autopeering.GetClosestPeers(autopeering.GetPublicPeers(), 10), args.withpeers)
+			for _, p := range apeers {
+				yggConfig.Peers = append(yggConfig.Peers, p.String())
+			}
 		}
 		fmt.Println(popura.SaveConfig(*yggConfig, *popConfig, args.confjson))
 		return

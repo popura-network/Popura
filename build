@@ -9,9 +9,6 @@ PKGVER=${PKGVER:-$(sh contrib/semver/version.sh --bare)}
 LDFLAGS="-X $PKGSRC.buildName=$PKGNAME -X $PKGSRC.buildVersion=$PKGVER"
 ARGS="-v"
 
-. ./make_assets
-make_peers_go
-
 while getopts "uaitc:l:dro:p" option
 do
   case "$option"

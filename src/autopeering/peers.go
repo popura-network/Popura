@@ -1,69 +1,71 @@
 package autopeering
 
-var PublicPeers = []string{
-	"tcp://140.238.168.104:17117",
-	"tcp://159.203.12.215:1010",
-	"tcp://185.165.169.234:8880",
-	"tcp://195.123.245.146:7743",
-	"tcp://[2001:470:1f13:e56::64]:39565",
-	"tcp://212.129.52.193:39565",
-	"tcp://213.188.197.95:10010",
-	"tcp://213.188.199.150:10010",
-	"tcp://213.188.210.9:10010",
-	"tcp://217.195.164.4:10000",
-	"tcp://[2a03:3b40:fe:ab::1]:46370",
-	"tcp://[2a04:5b81:2010::90]:2000",
-	"tcp://[2a05:9403::8b]:7743",
-	"tcp://[2a09:8280:1::3:312]:10010",
-	"tcp://[2a09:8280:1::3:313]:10010",
-	"tcp://[2a09:8280:1::a:2e2]:10010",
-	"tcp://37.205.14.171:46370",
-	"tcp://46.151.26.194:60575",
-	"tcp://51.15.204.214:12345",
-	"tcp://78.27.153.163:33165",
-	"tcp://94.130.203.208:5999",
-	"tcp://bunkertreff.ddns.net:5454",
-	"tcp://curiosity.tdjs.tech:30003",
-	"tcp://lancis.iscute.moe:49273",
-	"tcp://lan.tdem.in:50001",
-	"tcp://longseason.1200bps.xyz:13121",
-	"tcp://ygg.cofob.ru:80",
-	"tcp://yggdrasil.frank2.net:1337",
-	"tcp://ygg.loskiq.dev:17313",
-	"tcp://yggnode.cf:18226",
-	"tcp://ygg-ru2.cofob.ru:80",
-	"tcp://ygg-ru.cofob.ru:18000",
-	"tcp://ygg.tomasgl.ru:61933",
-	"tcp://ygg.tomasgl.ru:61933?key=c5e0c28a600c2118e986196a0bbcbda4934d8e9278ceabea48838dc5d8fae576",
-	"tcp://yugudorashiru.de:80",
-	"tcp://y.zbin.eu:7743",
-	"tls://140.238.168.104:17121",
-	"tls://159.203.12.215:1020",
-	"tls://185.130.44.194:7040",
-	"tls://185.165.169.234:8443",
-	"tls://185.22.60.71:8443",
-	"tls://[2001:470:1f13:e56::64]:39575",
-	"tls://212.129.52.193:39575",
-	"tls://213.188.197.95:10020",
-	"tls://213.188.199.150:10020",
-	"tls://217.195.164.4:10531",
-	"tls://[2a01:d0:ffff:4353::2]:6010",
-	"tls://[2a07:e01:105:444:c634:6bff:feb5:6e28]:7040",
-	"tls://[2a09:8280:1::3:313]:10020",
-	"tls://[2a09:8280:1::a:2e2]:10020",
-	"tls://45.147.198.155:6010",
-	"tls://46.151.26.194:8443",
-	"tls://51.15.204.214:54321",
-	"tls://78.27.153.163:33166",
-	"tls://94.103.82.150:8080",
-	"tls://lancis.iscute.moe:49274",
-	"tls://lan.tdem.in:50002",
-	"tls://longseason.1200bps.xyz:13122",
-	"tls://ygg.cofob.ru:443",
-	"tls://ygg.loskiq.dev:17314",
-	"tls://yggnode.cf:18227",
-	"tls://ygg-ru2.cofob.ru:443",
-	"tls://ygg-ru.cofob.ru:18001",
-	"tls://ygg.tomasgl.ru:61944",
-	"tls://ygg.tomasgl.ru:61944?key=c5e0c28a600c2118e986196a0bbcbda4934d8e9278ceabea48838dc5d8fae576",
-	"tls://yugudorashiru.de:443"}
+import (
+	_ "embed"
+	"math/rand"
+	"net/url"
+	"sort"
+	"strings"
+	"time"
+)
+
+//go:embed peers.txt
+var PublicPeers string
+
+// Get URLs of embedded public peers
+func GetPublicPeers() []url.URL {
+	var result []url.URL
+
+	for _, p := range strings.Split(PublicPeers, "\n") {
+		if url, err := url.Parse(p); err == nil {
+			result = append(result, *url)
+		} else {
+			panic(err)
+		}
+	}
+	return result
+}
+
+// Get n online peers with best latency from a peer list
+func GetClosestPeers(peerList []url.URL, n int) []url.URL {
+	var result []url.URL
+	onlinePeers := testPeers(peerList)
+
+	// Filter online peers
+	x := 0
+	for _, p := range onlinePeers {
+		if p.Online {
+			onlinePeers[x] = p
+			x++
+		}
+	}
+	onlinePeers = onlinePeers[:x]
+
+	sort.Slice(onlinePeers, func(i, j int) bool {
+		return onlinePeers[i].Latency < onlinePeers[j].Latency
+	})
+
+	for i := 0; i < len(onlinePeers); i++ {
+		if len(result) == n {
+			break
+		}
+		result = append(result, onlinePeers[i].URL)
+	}
+
+	return result
+}
+
+// Pick n random peers from a list
+func RandomPick(peerList []url.URL, n int) []url.URL {
+	if len(peerList) <= n {
+		return peerList
+	}
+
+	var res []url.URL
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	for _, i := range r.Perm(n) {
+		res = append(res, peerList[i])
+	}
+
+	return res
+}
