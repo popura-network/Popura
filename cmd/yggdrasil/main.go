@@ -25,8 +25,6 @@ import (
 	"github.com/yggdrasil-network/yggdrasil-go/src/tuntap"
 	"github.com/yggdrasil-network/yggdrasil-go/src/version"
 
-	_meshname "github.com/zhoreeq/meshname/pkg/meshname"
-
 	"github.com/popura-network/Popura/src/autopeering"
 	"github.com/popura-network/Popura/src/meshname"
 	"github.com/popura-network/Popura/src/popura"
@@ -81,7 +79,6 @@ type yggArgs struct {
 	getsnet       bool
 	loglevel      string
 	autopeer      bool
-	meshnameconf  bool
 	withpeers     int
 }
 
@@ -97,7 +94,6 @@ func getArgs() yggArgs {
 	logto := flag.String("logto", "stdout", "file path to log to, \"syslog\" or \"stdout\"")
 	getaddr := flag.Bool("address", false, "returns the IPv6 address as derived from the supplied configuration")
 	getsnet := flag.Bool("subnet", false, "returns the IPv6 subnet as derived from the supplied configuration")
-	meshnameconf := flag.Bool("meshnameconf", false, "use with -useconffile. Prints config with a default meshname DNS record")
 	withpeers := flag.Int("withpeers", 0, "generate a config with N number of alive peers")
 	loglevel := flag.String("loglevel", "info", "loglevel to enable")
 	flag.Parse()
@@ -113,7 +109,6 @@ func getArgs() yggArgs {
 		logto:         *logto,
 		getaddr:       *getaddr,
 		getsnet:       *getsnet,
-		meshnameconf:  *meshnameconf,
 		withpeers:     *withpeers,
 		loglevel:      *loglevel,
 	}
@@ -171,19 +166,6 @@ func run(args yggArgs, ctx context.Context, done chan struct{}) {
 			return
 		}
 
-		if args.meshnameconf {
-			ip := popura.AddressFromKey(yggConfig.PrivateKey)
-			subDomain := _meshname.DomainFromIP(ip)
-
-			defaultRecord := fmt.Sprintf("%s.vapordns AAAA %s", subDomain, ip.String())
-			meshnameConfig := make(map[string][]string)
-			meshnameConfig[subDomain] = []string{defaultRecord}
-
-			popConfig.Meshname.Enable = true
-			popConfig.Meshname.Config = meshnameConfig
-			fmt.Println(popura.SaveConfig(*yggConfig, *popConfig, args.confjson))
-			return
-		}
 	case args.genconf:
 		// Generate a new configuration and print it to stdout.
 		yggConfig, popConfig = popura.GenerateConfig()
