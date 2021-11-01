@@ -17,21 +17,11 @@ import (
 
 type PopuraConfig struct {
 	Meshname MeshnameConfig `comment:"DNS server description"`
-	RAdv     RAdvConfig     `comment:"Router Advertisement settings"`
 }
 
 type MeshnameConfig struct {
-	Enable bool                `comment:"Enable or disable the DNS server"`
-	Listen string              `comment:"Listen address for the DNS server"`
-	Config map[string][]string `comment:"DNS zone configuration"`
-}
-
-type RAdvConfig struct {
-	Enable        bool   `comment:"Enable or disable Router Advertisement"`
-	Interface     string `comment:"Send router advertisement for this network interface"`
-	SetGatewayIP  bool   `comment:"Set IP address on the Interface automatically"`
-	DefaultRouter bool   `comment:"Advertise a default router (a fix for Android)"`
-	DNS           bool   `comment:"Advertise this router as a DNS server (RFC 8106)"`
+	Enable bool   `comment:"Enable or disable the DNS server"`
+	Listen string `comment:"Listen address for the DNS server"`
 }
 
 func GenerateConfig() (*config.NodeConfig, *PopuraConfig) {
@@ -39,13 +29,6 @@ func GenerateConfig() (*config.NodeConfig, *PopuraConfig) {
 
 	popConfig.Meshname.Enable = false
 	popConfig.Meshname.Listen = "[::1]:53535"
-	popConfig.Meshname.Config = map[string][]string{}
-
-	popConfig.RAdv.Enable = false
-	popConfig.RAdv.Interface = "eth0"
-	popConfig.RAdv.SetGatewayIP = true
-	popConfig.RAdv.DefaultRouter = false
-	popConfig.RAdv.DNS = false
 
 	return defaults.GenerateConfig(), &popConfig
 }

@@ -27,16 +27,9 @@ func (s *MeshnameServer) Init(yggcore *core.Core, yggConfig *config.NodeConfig, 
 	s.server = _meshname.New(
 		log,
 		popConfig.Meshname.Listen,
-		map[string]*net.IPNet{"ygg": yggIPNet, "meshname": yggIPNet, "vapordns": yggIPNet},
+		map[string]*net.IPNet{"ygg": yggIPNet, "meshname": yggIPNet, "popura": yggIPNet},
 		false, // enable meship protocol
-		false, // allow remote queries
 	)
-
-	if dnsRecords, err := _meshname.ParseDNSRecordsMap(popConfig.Meshname.Config); err == nil {
-		s.server.ConfigureDNSRecords(dnsRecords)
-	} else {
-		s.log.Errorln("meshname: Failed to parse Meshname config:", err)
-	}
 
 	return nil
 }
@@ -54,14 +47,7 @@ func (s *MeshnameServer) Stop() error {
 	return nil
 }
 
-func (s *MeshnameServer) UpdateConfig(yggConfig *config.NodeConfig, popConfig *popura.PopuraConfig) {
-	// TODO Handle Enable/Disable and Listen
-	if dnsRecords, err := _meshname.ParseDNSRecordsMap(popConfig.Meshname.Config); err == nil {
-		s.server.ConfigureDNSRecords(dnsRecords)
-	} else {
-		s.log.Errorln("meshname: Failed to parse Meshname config:", err)
-	}
-}
+func (s *MeshnameServer) UpdateConfig(yggConfig *config.NodeConfig, popConfig *popura.PopuraConfig) {}
 
 func (s *MeshnameServer) SetupAdminHandlers(a *admin.AdminSocket) {}
 
