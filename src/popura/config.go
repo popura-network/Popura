@@ -20,8 +20,8 @@ type PopuraConfig struct {
 }
 
 type MeshnameConfig struct {
-	Enable bool                `comment:"Enable or disable the DNS server"`
-	Listen string              `comment:"Listen address for the DNS server"`
+	Enable bool   `comment:"Enable or disable the DNS server"`
+	Listen string `comment:"Listen address for the DNS server"`
 }
 
 func GenerateConfig() (*config.NodeConfig, *PopuraConfig) {
