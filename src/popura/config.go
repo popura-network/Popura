@@ -27,7 +27,7 @@ type MeshnameConfig struct {
 func GenerateConfig() (*config.NodeConfig, *PopuraConfig) {
 	popConfig := PopuraConfig{}
 
-	popConfig.Meshname.Enable = false
+	popConfig.Meshname.Enable = true
 	popConfig.Meshname.Listen = "[::1]:53535"
 
 	return defaults.GenerateConfig(), &popConfig
