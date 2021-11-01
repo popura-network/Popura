@@ -11,6 +11,6 @@ require (
 	github.com/miekg/dns v1.1.41 // indirect
 	github.com/mitchellh/mapstructure v1.4.1
 	github.com/yggdrasil-network/yggdrasil-go v0.4.0
-	github.com/zhoreeq/meshname v0.1.2
+	github.com/zhoreeq/meshname v0.2.0
 	golang.org/x/text v0.3.7-0.20210503195748-5c7c50ebbd4f
 )

@@ -29,7 +29,6 @@ func (s *MeshnameServer) Init(yggcore *core.Core, yggConfig *config.NodeConfig, 
 		popConfig.Meshname.Listen,
 		map[string]*net.IPNet{"ygg": yggIPNet, "meshname": yggIPNet, "popura": yggIPNet},
 		false, // enable meship protocol
-		false, // allow remote queries
 	)
 
 	return nil
