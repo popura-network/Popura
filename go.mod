@@ -10,7 +10,7 @@ require (
 	github.com/kardianos/minwinsvc v1.0.0
 	github.com/miekg/dns v1.1.41 // indirect
 	github.com/mitchellh/mapstructure v1.4.1
-	github.com/yggdrasil-network/yggdrasil-go v0.4.0
+	github.com/yggdrasil-network/yggdrasil-go v0.4.1
 	github.com/zhoreeq/meshname v0.2.0
-	golang.org/x/text v0.3.7-0.20210503195748-5c7c50ebbd4f
+	golang.org/x/text v0.3.8-0.20211004125949-5bd84dd9b33b
 )
