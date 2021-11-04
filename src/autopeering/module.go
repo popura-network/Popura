@@ -26,17 +26,21 @@ type AutoPeering struct {
 	checkPeerTimer *time.Timer
 	hadPeers       time.Time
 	peers          []url.URL
+	enabled        bool
 }
 
 func (ap *AutoPeering) Init(yggcore *core.Core, yggConfig *config.NodeConfig, popConfig *popura.PopuraConfig, log *log.Logger, options interface{}) error {
 	ap.core = yggcore
 	ap.log = log
 	ap.peers = GetPublicPeers()
+	ap.enabled = popConfig.Autopeering.Enable
 	return nil
 }
 
 func (ap *AutoPeering) Start() error {
-	go ap.checkPeerLoop()
+	if ap.enabled {
+		go ap.checkPeerLoop()
+	}
 	ap.log.Infoln("autopeering: module started")
 	return nil
 }
