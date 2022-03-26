@@ -20,7 +20,8 @@ Popura adds new command line flags and config file sections to control those fea
 
 - [Arch Linux](https://aur.archlinux.org/packages/popura-git/)
 - [Debian](https://github.com/popura-network/popura-debian-repo)
-- [Gentoo](https://github.com/BratishkaErik/bratishkaerik-overlay)
+- [Gentoo](https://yggdrasil-network.github.io/installation-linux-gentoo.html)
+    - Just replace `net-p2p/yggdrasil-go` with `net-p2p/popura`
 - [OpenWRT](https://github.com/popura-network/hypermodem-packages)
 - [Windows](https://github.com/popura-network/Popura/releases)
 
