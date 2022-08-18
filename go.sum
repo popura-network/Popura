@@ -1,5 +1,5 @@
-github.com/Arceliar/ironwood v0.0.0-20211125050254-8951369625d0 h1:QUqcb7BOcBU2p7Nax7pESOb8hrZYtI0Ts6j4v4mvcQo=
-github.com/Arceliar/ironwood v0.0.0-20211125050254-8951369625d0/go.mod h1:RP72rucOFm5udrnEzTmIWLRVGQiV/fSUAQXJ0RST/nk=
+github.com/Arceliar/ironwood v0.0.0-20220409035209-b7f71f05435a h1:yfbnOyqPcx2gi5cFIJ2rlPz5M6rFPHT/c8FgZmFjCdc=
+github.com/Arceliar/ironwood v0.0.0-20220409035209-b7f71f05435a/go.mod h1:RP72rucOFm5udrnEzTmIWLRVGQiV/fSUAQXJ0RST/nk=
 github.com/Arceliar/phony v0.0.0-20210209235338-dde1a8dca979 h1:WndgpSW13S32VLQ3ugUxx2EnnWmgba1kCqPkd4Gk1yQ=
 github.com/Arceliar/phony v0.0.0-20210209235338-dde1a8dca979/go.mod h1:6Lkn+/zJilRMsKmbmG1RPoamiArC6HS73xbwRyp3UyI=
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
@@ -42,8 +42,8 @@ github.com/vishvananda/netlink v1.1.0/go.mod h1:cTgwzPIzzgDAYoQrMm0EdrjRUBkTqKYp
 github.com/vishvananda/netns v0.0.0-20191106174202-0a2b9b5464df/go.mod h1:JP3t17pCcGlemwknint6hfoeCVQrEMVwxRLRjXpq+BU=
 github.com/vishvananda/netns v0.0.0-20210104183010-2eb08e3e575f h1:p4VB7kIXpOQvVn1ZaTIVp+3vuYAXFe3OJEvjbUYJLaA=
 github.com/vishvananda/netns v0.0.0-20210104183010-2eb08e3e575f/go.mod h1:DD4vA1DwXk04H54A1oHXtwZmA0grkVMdPxx/VGLCah0=
-github.com/yggdrasil-network/yggdrasil-go v0.4.3 h1:LNS7kNpKzFlxQ9xmD5tfmMEvzwa+utBoD6pV9t2a8q4=
-github.com/yggdrasil-network/yggdrasil-go v0.4.3/go.mod h1:A1/8kOQT7vzBxlkQtLf1KzJR0cbfL/2zjOCiYOAdjjo=
+github.com/yggdrasil-network/yggdrasil-go v0.4.4 h1:DYjUPJ6wf3qgwuwm+7rwAZFhva4vpVkMzTUT/Gb+HPk=
+github.com/yggdrasil-network/yggdrasil-go v0.4.4/go.mod h1:X7a1YJGaLZ4QOFmI0CYZibiVLx1vxsphZRfkNMwLavk=
 github.com/yuin/goldmark v1.4.0/go.mod h1:mwnBkeHKe2W/ZEtQ+71ViKU8L12m81fl3OWwC1Zlc8k=
 github.com/zhoreeq/meshname v0.2.0 h1:kRAHmemR/MpTmas2ZNoL8VJnYdbesZRwsGR2qEmzyDo=
 github.com/zhoreeq/meshname v0.2.0/go.mod h1:3I8MpFZ304bAYiD+e+ovlMDDZat8aKyUlqllUok4qm0=
@@ -57,9 +57,11 @@ golang.org/x/exp v0.0.0-20190731235908-ec7cb31e5a56/go.mod h1:JhuoJpWY28nO4Vef9t
 golang.org/x/image v0.0.0-20190227222117-0694c2d4d067/go.mod h1:kZ7UVZpmo3dzQBMxlp+ypCbDeSB+sBbTgSJuh5dn5js=
 golang.org/x/image v0.0.0-20190802002840-cff245a6509b/go.mod h1:FeLwcggjj3mMvU+oOTbSwawSJRM1uh48EjtB4UJZlP0=
 golang.org/x/mobile v0.0.0-20190312151609-d3739f865fa6/go.mod h1:z+o9i4GpDbdi3rU15maQ/Ox0txvL9dWGYEHz965HBQE=
+golang.org/x/mobile v0.0.0-20220112015953-858099ff7816 h1:jhDgkcu3yQ4tasBZ+1YwDmK7eFmuVf1w1k+NGGGxfmE=
 golang.org/x/mobile v0.0.0-20220112015953-858099ff7816/go.mod h1:pe2sM7Uk+2Su1y7u/6Z8KJ24D7lepUjFZbhFOrmDfuQ=
 golang.org/x/mod v0.1.0/go.mod h1:0QHyrYULN0/3qlju5TqG8bIK38QM8yzMo5ekMj3DlcY=
 golang.org/x/mod v0.1.1-0.20191105210325-c90efee705ee/go.mod h1:QqPTAvyqsEbceGzBzNggFXnrqF1CaUcvgkdR5Ot7KZg=
+golang.org/x/mod v0.4.2 h1:Gz96sIWK3OalVv/I/qNygP42zyoKp3xptRVCWRFEBvo=
 golang.org/x/mod v0.4.2/go.mod h1:s0Qsj1ACt9ePp/hMypM3fl4fZqREWJwdYDEqhRiZZUA=
 golang.org/x/net v0.0.0-20190311183353-d8887717615a/go.mod h1:t9HGtf8HONx5eT2rtn7q6eTqICYqUVnKs3thJo3Qplg=
 golang.org/x/net v0.0.0-20190404232315-eb5bcb51f2a3/go.mod h1:t9HGtf8HONx5eT2rtn7q6eTqICYqUVnKs3thJo3Qplg=
@@ -104,9 +106,11 @@ golang.org/x/tools v0.0.0-20190312151545-0bb0c0a6e846/go.mod h1:LCzVGOaR6xXOjkQ3
 golang.org/x/tools v0.0.0-20191119224855-298f0cb1881e/go.mod h1:b+2E5dAYhXwXZwtnZ6UAqBI28+e2cm9otk0dWdXHAEo=
 golang.org/x/tools v0.0.0-20191216052735-49a3e744a425/go.mod h1:TB2adYChydJhpapKDTa4BR/hXlZSLoq2Wpct/0txZ28=
 golang.org/x/tools v0.1.7/go.mod h1:LGqMHiF4EqQNHR1JncWGqT5BVaXmza+X+BDGol+dOxo=
+golang.org/x/tools v0.1.8-0.20211022200916-316ba0b74098 h1:YuekqPskqwCCPM79F1X5Dhv4ezTCj+Ki1oNwiafxkA0=
 golang.org/x/tools v0.1.8-0.20211022200916-316ba0b74098/go.mod h1:LGqMHiF4EqQNHR1JncWGqT5BVaXmza+X+BDGol+dOxo=
 golang.org/x/xerrors v0.0.0-20190717185122-a985d3407aa7/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
 golang.org/x/xerrors v0.0.0-20191011141410-1b5146add898/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
+golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 h1:go1bK/D/BFZV2I8cIQd1NKEZ+0owSTG1fDTci4IqFcE=
 golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
 golang.zx2c4.com/wireguard v0.0.0-20211012062646-82d2aa87aa62/go.mod h1:id8Oh3eCCmpj9uVGWVjsUAl6UPX5ysMLzu6QxJU2UOU=
 golang.zx2c4.com/wireguard v0.0.0-20211017052713-f87e87af0d9a h1:tTbyylK9/D3u/wEP26Vx7L700UpY48nhioJWZM1vhZw=
