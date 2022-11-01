@@ -387,12 +387,16 @@ func run(args yggArgs, ctx context.Context) {
 
 		popuraConfig.Meshname.Enable = args.meshnameenable
 		popuraConfig.Meshname.Listen = args.meshnamelisten
-		n.meshname.Init(n.core, cfg, popuraConfig, logger, nil)
-		n.meshname.Start()
+		_ = n.meshname.Init(n.core, cfg, popuraConfig, logger, nil)
+		if err = n.meshname.Start(); err != nil {
+			panic(err)
+		}
 
 		popuraConfig.Autopeering.Enable = args.autopeer
-		n.autopeering.Init(n.core, cfg, popuraConfig, logger, nil)
-		n.autopeering.Start()
+		_ = n.autopeering.Init(n.core, cfg, popuraConfig, logger, nil)
+		if err = n.autopeering.Start(); err != nil {
+			panic(err)
+		}
 	}
 
 	// Make some nice output that tells us what our IPv6 address and subnet are.
