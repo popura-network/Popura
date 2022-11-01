@@ -23,7 +23,11 @@ MINOR=$(echo $TAG | cut -c 2- | cut -d "." -f 2)
 PATCH=$(echo $TAG | cut -c 2- | cut -d "." -f 3 | awk -F"rc" '{print $1}')
 
 # Output in the desired format
-printf '%s%d.%d.%s' "$PREPEND" "$((MAJOR))" "$((MINOR))" "$PATCH"
+if [ $((PATCH)) -eq 0 ]; then
+  printf '%s%d.%d' "$PREPEND" "$((MAJOR))" "$((MINOR))"
+else
+  printf '%s%d.%d.%d' "$PREPEND" "$((MAJOR))" "$((MINOR))" "$((PATCH))"
+fi
 
 # Add the build tag on non-master branches
 if [ "$BRANCH" != "master" ]; then
