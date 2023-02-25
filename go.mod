@@ -13,7 +13,7 @@ require (
 	github.com/yggdrasil-network/yggdrasil-go v0.4.6
 	github.com/zhoreeq/meshname v0.2.0
 	golang.org/x/mobile v0.0.0-20221012134814-c746ac228303
-	golang.org/x/text v0.3.8
+	golang.org/x/text v0.7.0
 )
 
 require (
@@ -30,8 +30,8 @@ require (
 	github.com/vishvananda/netns v0.0.0-20210104183010-2eb08e3e575f // indirect
 	golang.org/x/crypto v0.0.0-20221012134737-56aed061732a // indirect
 	golang.org/x/mod v0.6.0-dev.0.20220419223038-86c51ed26bb4 // indirect
-	golang.org/x/net v0.0.0-20221014081412-f15817d10f9b // indirect
-	golang.org/x/sys v0.0.0-20221013171732-95e765b1cc43 // indirect
+	golang.org/x/net v0.7.0 // indirect
+	golang.org/x/sys v0.5.0 // indirect
 	golang.org/x/tools v0.1.12 // indirect
 	golang.zx2c4.com/wireguard v0.0.0-20211017052713-f87e87af0d9a // indirect
 	golang.zx2c4.com/wireguard/windows v0.4.12 // indirect
